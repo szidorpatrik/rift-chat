@@ -10,6 +10,7 @@
       "@types": ["./src/types.ts"],
       "@router": ["./src/router/index.ts"],
       "@components/*": ["./src/components/*"],
+      "@ui/*": ["./src/components/ui/*"],
       "@assets/*": ["./src/assets/*"],
       "@stores/*": ["./src/stores/*"],
       "@views/*": ["./src/views/*"],
