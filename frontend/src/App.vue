@@ -3,5 +3,9 @@
 </script>
 
 <template>
-    <router-view />
+    <UApp>
+        <NuxtPage>
+            <router-view />
+        </NuxtPage>
+    </UApp>
 </template>

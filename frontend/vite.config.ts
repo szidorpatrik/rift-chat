@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { fileURLToPath } from 'url'
 import tailwindcss from '@tailwindcss/vite'
-import tsconfigpaths from 'vite-tsconfig-paths'
+import ui from '@nuxt/ui/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,7 +11,7 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     tailwindcss(),
-    //tsconfigpaths(),
+    ui(),
   ],
   resolve: {
     tsconfigPaths: true,
