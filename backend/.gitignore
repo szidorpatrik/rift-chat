@@ -1,0 +1,4 @@
+go-server
+out/
+.idea/
+.env
