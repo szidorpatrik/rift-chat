@@ -1,6 +1,6 @@
 <template>
     <UContainer>
-        <UButton>Button</UButton>
+        <UButton>App</UButton>
     </UContainer>
 </template>
 
