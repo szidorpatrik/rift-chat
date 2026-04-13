@@ -7,7 +7,7 @@ import (
 
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/api"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
@@ -15,10 +15,13 @@ func main() {
 
 	if err := apiConfig.LoadEnvs(); err != nil {
 		log.Fatalf("Failed to load environment variables: %v", err)
-		return
 	}
 
-	db, err := sql.Open("postgres", apiConfig.DbUrl)
+	if err := apiConfig.RunMigrations(); err != nil {
+        log.Fatalf("Migration failed: %v", err)
+    }
+
+	db, err := sql.Open("pgx", apiConfig.DbUrl)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 		return

@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE channels (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid_v7(),
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
     server_id UUID NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     type VARCHAR(20) NOT NULL DEFAULT 'text', -- 'text' or 'voice' or 'category'
