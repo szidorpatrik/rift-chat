@@ -37,13 +37,13 @@ services:
     container_name: ${BACKEND_CONTAINER_NAME}
     restart: unless-stopped
     environment:
-      - HTTP_PORT=${BACKEND_HTTP_PORT}
-      - QUIC_PORT=${BACKEND_QUIC_PORT}
-      - PLATFORM=${BACKEND_PLATFORM}
-      - LISTEN_ADDR=${BACKEND_LISTEN_ADDR}
-      - JWT_SECRET=${BACKEND_JWT_SECRET}
-      - VALKEY_URL=${BACKEND_VALKEY_URL}
-      - DB_URL=${BACKEND_DATABASE_URL}
+      - BACKEND_HTTP_PORT=${BACKEND_HTTP_PORT}
+      - BACKEND_QUIC_PORT=${BACKEND_QUIC_PORT}
+      - BACKEND_PLATFORM=${BACKEND_PLATFORM}
+      - BACKEND_LISTEN_ADDR=${BACKEND_LISTEN_ADDR}
+      - BACKEND_JWT_SECRET=${BACKEND_JWT_SECRET}
+      - BACKEND_VALKEY_URL=${BACKEND_VALKEY_URL}
+      - BACKEND_DATABASE_URL=${BACKEND_DATABASE_URL}
     ports:
       - "${BACKEND_HTTP_PORT}:${BACKEND_HTTP_PORT}"
       - "${BACKEND_QUIC_PORT}:${BACKEND_QUIC_PORT}/udp"
@@ -74,7 +74,8 @@ services:
     ports:
       - "${VITE_FRONTEND_PORT}:${VITE_FRONTEND_PORT}"
     depends_on:
-      - backend
+      backend:
+          condition: service_healthy
     networks:
       - riftchat_network
 

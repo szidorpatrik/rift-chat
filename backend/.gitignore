@@ -3,3 +3,4 @@ riftchat-api
 out/
 .idea/
 .env
+.env-dev
