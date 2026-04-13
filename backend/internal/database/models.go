@@ -5,16 +5,63 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
-	"github.com/google/uuid"
+	uuid "github.com/google/uuid"
+	models "github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/models"
 )
+
+type Channel struct {
+	ID        uuid.UUID
+	ServerID  uuid.UUID
+	Name      string
+	Type      string
+	Position  int32
+	CreatedAt sql.NullTime
+}
+
+type Message struct {
+	ID        uuid.UUID
+	ChannelID uuid.UUID
+	UserID    uuid.UUID
+	Content   string
+	Metadata  models.MessageMetadata
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
+}
+
+type RefreshToken struct {
+	UserID    uuid.UUID
+	Token     string
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
+	ExpiresAt time.Time
+	RevokedAt sql.NullTime
+}
+
+type Server struct {
+	ID        uuid.UUID
+	Name      string
+	OwnerID   uuid.UUID
+	IconUrl   sql.NullString
+	CreatedAt sql.NullTime
+}
+
+type ServerMember struct {
+	ServerID   uuid.UUID
+	UserID     uuid.UUID
+	ServerName sql.NullString
+	JoinedAt   sql.NullTime
+}
 
 type User struct {
 	ID           uuid.UUID
-	DisplayName  string
+	Username     string
 	Email        string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	PasswordHash string
+	AvatarUrl    sql.NullString
+	Status       sql.NullString
+	PasswordHash string `json:"-"`
+	CreatedAt    sql.NullTime
+	UpdatedAt    sql.NullTime
 }
