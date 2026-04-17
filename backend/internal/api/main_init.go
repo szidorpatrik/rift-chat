@@ -16,14 +16,21 @@ import (
 
 func (cfg *ApiConfig) LoadEnvs() error {
 	platform := os.Getenv("BACKEND_PLATFORM")
-	if platform == "dev" || platform == "" {
-		godotenv.Load("./.env-dev")
+
+	switch platform {
+	case "", "dev", "development":
+		envFile := ".env-dev"
+		fmt.Printf("=== RUNNING IN DEVELOPMENT MODE, LOADING '%s' ===\n", envFile)
+		godotenv.Overload(envFile)
+	case "prod", "production":
+		fmt.Printf("=== RUNNING IN PRODUCTION MODE ===\n")
+	default:
+		return fmt.Errorf("=== UNKNOWN BACKEND_PLATFORM '%s': Check './backend/.env' if running locally or './.env' if running via docker compose ===\n", platform)
 	}
 
 	requiredEnvs := []string{
-		"BACKEND_HTTP_PORT", "BACKEND_QUIC_PORT", "BACKEND_PLATFORM",
-		"BACKEND_LISTEN_ADDR", "BACKEND_JWT_SECRET", "BACKEND_VALKEY_URL",
-		"BACKEND_DATABASE_URL",
+		"BACKEND_HTTP_PORT", "BACKEND_QUIC_PORT","BACKEND_LISTEN_ADDR", 
+		"BACKEND_JWT_SECRET", "BACKEND_VALKEY_URL", "BACKEND_DATABASE_URL",
 	}
 
 	for _, envKey := range requiredEnvs {
@@ -62,21 +69,23 @@ func (cfg *ApiConfig) LoadEnvs() error {
 }
 
 func (cfg *ApiConfig) RunMigrations() error {
-    db, err := sql.Open("pgx", cfg.DbUrl)
-    if err != nil {
-        return fmt.Errorf("failed to open database for migrations: %w", err)
-    }
-    defer db.Close()
+	fmt.Printf("=== RUNNING DATABASE MIGRATIONS ===\n")
 
-    goose.SetBaseFS(schema.MigrationsFS)
+	db, err := sql.Open("pgx", cfg.DbUrl)
+	if err != nil {
+		return fmt.Errorf("failed to open database for migrations: %w", err)
+	}
+	defer db.Close()
 
-    if err := goose.SetDialect("postgres"); err != nil {
-        return fmt.Errorf("failed to set goose dialect: %w", err)
-    }
+	goose.SetBaseFS(schema.MigrationsFS)
 
-    if err := goose.Up(db, "."); err != nil {
-        return fmt.Errorf("failed to run goose up: %w", err)
-    }
+	if err := goose.SetDialect("postgres"); err != nil {
+		return fmt.Errorf("failed to set goose dialect: %w", err)
+	}
 
-    return nil
+	if err := goose.Up(db, "."); err != nil {
+		return fmt.Errorf("failed to run goose up: %w", err)
+	}
+
+	return nil
 }
