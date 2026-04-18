@@ -41,11 +41,8 @@ func main() {
 	// Admin endpoints
 
 	// Auth endpoints
-	usersHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("User created successfully!\n"))
-	})
 	//mux.Handle("POST /users", cfg.AuthMiddleware(http.HandlerFunc(cfg.CreateUserHandler)))
-	mux.Handle("POST /users", usersHandler)
+	mux.HandleFunc("POST /users", cfg.CreateUserHandler)
 	// User endpoints
 
 	// Middlewares
