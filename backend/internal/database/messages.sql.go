@@ -23,7 +23,7 @@ INSERT INTO
     )
 VALUES ($1, $2, $3, $4, $5)
 RETURNING
-    id, channel_id, user_id, content, metadata, created_at, updated_at
+    id, channel_id, user_id, content, metadata, created_at, updated_at, deleted_at
 `
 
 type CreateMessageParams struct {
@@ -51,12 +51,13 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getMessagesForChannel = `-- name: GetMessagesForChannel :many
-SELECT id, channel_id, user_id, content, metadata, created_at, updated_at
+SELECT id, channel_id, user_id, content, metadata, created_at, updated_at, deleted_at
 FROM messages
 WHERE
     channel_id = $1
@@ -89,6 +90,7 @@ func (q *Queries) GetMessagesForChannel(ctx context.Context, arg GetMessagesForC
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}

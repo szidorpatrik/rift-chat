@@ -8,7 +8,6 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/sql/schema"
-	//"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/models"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -23,7 +22,7 @@ func (cfg *ApiConfig) LoadEnvs() error {
 		fmt.Printf("=== RUNNING IN DEVELOPMENT MODE, LOADING '%s' ===\n", envFile)
 		godotenv.Overload(envFile)
 	case "prod", "production":
-		fmt.Printf("=== RUNNING IN PRODUCTION MODE ===\n")
+		fmt.Println("=== RUNNING IN PRODUCTION MODE ===")
 	default:
 		return fmt.Errorf("=== UNKNOWN BACKEND_PLATFORM '%s': Check './backend/.env' if running locally or './.env' if running via docker compose ===\n", platform)
 	}
@@ -69,7 +68,7 @@ func (cfg *ApiConfig) LoadEnvs() error {
 }
 
 func (cfg *ApiConfig) RunMigrations() error {
-	fmt.Printf("=== RUNNING DATABASE MIGRATIONS ===\n")
+	fmt.Println("=== RUNNING DATABASE MIGRATIONS ===")
 
 	db, err := sql.Open("pgx", cfg.DbUrl)
 	if err != nil {

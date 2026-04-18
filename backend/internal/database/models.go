@@ -29,6 +29,7 @@ type Message struct {
 	Metadata  models.MessageMetadata
 	CreatedAt sql.NullTime
 	UpdatedAt sql.NullTime
+	DeletedAt sql.NullTime
 }
 
 type RefreshToken struct {
@@ -64,4 +65,5 @@ type User struct {
 	PasswordHash string `json:"-"`
 	CreatedAt    sql.NullTime
 	UpdatedAt    sql.NullTime
+	DeletedAt    sql.NullTime
 }

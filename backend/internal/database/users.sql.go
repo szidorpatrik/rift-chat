@@ -21,7 +21,7 @@ INSERT INTO
     )
 VALUES ($1, $2, $3, $4)
 RETURNING
-    id, username, email, avatar_url, status, password_hash, created_at, updated_at
+    id, username, email, avatar_url, status, password_hash, created_at, updated_at, deleted_at
 `
 
 type CreateUserParams struct {
@@ -48,12 +48,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.PasswordHash,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at FROM users WHERE email = $1
+SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at, deleted_at FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -68,12 +69,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.PasswordHash,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at FROM users WHERE id = $1
+SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at, deleted_at FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
@@ -88,12 +90,13 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PasswordHash,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUsers = `-- name: GetUsers :many
-SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at FROM users
+SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at, deleted_at FROM users
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
@@ -114,6 +117,7 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 			&i.PasswordHash,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
