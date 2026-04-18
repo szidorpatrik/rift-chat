@@ -14,3 +14,8 @@ type ApiConfig struct {
 	ValkeyUrl   string
 	JwtSecret   string
 }
+
+type RespondError struct {
+	Error      string `json:"error"`
+	StatusCode int    `json:"status_code,omitempty"`
+}

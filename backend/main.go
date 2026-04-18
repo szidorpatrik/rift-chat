@@ -11,17 +11,17 @@ import (
 )
 
 func main() {
-	apiConfig := &api.ApiConfig{}
+	cfg := &api.ApiConfig{}
 
-	if err := apiConfig.LoadEnvs(); err != nil {
+	if err := cfg.LoadEnvs(); err != nil {
 		log.Fatalf("Failed to load environment variables: %v", err)
 	}
 
-	if err := apiConfig.RunMigrations(); err != nil {
+	if err := cfg.RunMigrations(); err != nil {
         log.Fatalf("Migration failed: %v", err)
     }
 
-	db, err := sql.Open("pgx", apiConfig.DbUrl)
+	db, err := sql.Open("pgx", cfg.DbUrl)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 		return
@@ -31,25 +31,31 @@ func main() {
 	defer db.Close()
 
 	dbQueries := database.New(db)
-	apiConfig.DbQueries = dbQueries
+	cfg.DbQueries = dbQueries
 
 	mux := http.NewServeMux()
 
 	// Healthcheck endpoint
-	mux.HandleFunc("/healthz", apiConfig.HealthzHandler)
+	mux.HandleFunc("/healthz", cfg.HealthzHandler)
 
 	// Admin endpoints
 
 	// Auth endpoints
-
+	usersHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("User created successfully!\n"))
+	})
+	//mux.Handle("POST /users", cfg.AuthMiddleware(http.HandlerFunc(cfg.CreateUserHandler)))
+	mux.Handle("POST /users", usersHandler)
 	// User endpoints
 
+	// Middlewares
+	loggedRouter := cfg.LoggingMiddleware(mux)
 	httpServer := &http.Server{
-		Handler: mux,
-		Addr: apiConfig.FullAddress,
+		Handler: loggedRouter, 
+		Addr:    cfg.FullAddress,
 	}
+
+	// Start the server
 	log.Printf("rift-chat api listening on :%v\n", httpServer.Addr)
 	log.Fatal(httpServer.ListenAndServe())
 }
-
-
