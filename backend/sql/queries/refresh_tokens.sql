@@ -13,7 +13,7 @@ VALUES (
         $2,
         NOW(),
         NOW(),
-        NOW() + INTERVAL '60 days',
+        NOW() + INTERVAL '30 days',
         NULL
     )
 RETURNING

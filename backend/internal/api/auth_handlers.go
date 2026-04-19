@@ -1,20 +1,18 @@
 package api
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/auth"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
-	passwordvalidator "github.com/wagslane/go-password-validator"
 )
 
-const minEntropyBits = 60
+const accessTokenExpiry = time.Hour
 
 var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{3,30}$`)
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
@@ -71,37 +69,64 @@ func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	RespondWithJSON(w, http.StatusCreated, res)
 }
 
-func validateCreateUserRequest(req CreateUserRequest) (int, error) {
-	if req.Username == "" || req.Password == "" || req.Email == "" {
-		return http.StatusBadRequest, fmt.Errorf("username, email, and password are required")
-	}
-	if !usernameRegex.MatchString(req.Username) {
-		return http.StatusBadRequest, fmt.Errorf("username must be 3-30 characters and contain only letters, numbers, and underscores")
-	}
-	if !emailRegex.MatchString(req.Email) {
-		return http.StatusBadRequest, fmt.Errorf("invalid email address format")
-	}
-	if err := passwordvalidator.Validate(req.Password, minEntropyBits); err != nil {
-		return http.StatusBadRequest, fmt.Errorf("password does not meet complexity requirements")
-	}
-	return http.StatusOK, nil
-}
-
-func (cfg *ApiConfig) checkUserExists(req CreateUserRequest, ctx context.Context) (int, error) {
-	// Check if Username exists
-	if _, err := cfg.DbQueries.GetUserByUsername(ctx, req.Username); err == nil {
-		return http.StatusConflict, fmt.Errorf("username already exists")
-	} else if err != sql.ErrNoRows {
-		// Something went wrong with the DB.
-		return http.StatusInternalServerError, fmt.Errorf("something went wrong")
+func (cfg *ApiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, http.StatusBadRequest, "invalid request body")
+		return
 	}
 
-	// Check if Email exists
-	if _, err := cfg.DbQueries.GetUserByEmail(ctx, req.Email); err == nil {
-		return http.StatusConflict, fmt.Errorf("email already exists")
-	} else if err != sql.ErrNoRows {
-		// Something went wrong with the DB.
-		return http.StatusInternalServerError, fmt.Errorf("something went wrong")
+	// Validate user input
+	if code, err := cfg.validateLoginRequest(req); err != nil {
+		RespondWithError(w, code, err.Error())
+		return
 	}
-	return http.StatusOK, nil
+
+	// Check if user exists
+	user, err := cfg.DbQueries.GetUserByUsername(r.Context(), req.Username)
+	if err == sql.ErrNoRows {
+		// Agianst timing attacks
+		auth.HashPassword("just a silly time waster")
+		RespondWithError(w, http.StatusUnauthorized, "incorrect username or password")
+		return
+	} else if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "something went wrong")
+		return
+	}
+
+	// Check password
+	if matching, err := auth.CheckPasswordHash(req.Password, user.PasswordHash); err != nil {
+		RespondWithError(w, http.StatusUnauthorized, "something went wrong")
+		return
+	} else if !matching {
+		RespondWithError(w, http.StatusUnauthorized, "incorrect username or password")
+		return
+	}
+
+	// TODO: Refresh token rotation
+	refreshToken, hashedRefreshToken := auth.MakeRefreshToken()
+	params := database.CreateRefreshTokenParams{
+		UserID: user.ID,
+		Token:  hashedRefreshToken,
+	}
+	if _, err := cfg.DbQueries.CreateRefreshToken(r.Context(), params); err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "something went wrong")
+		return
+	}
+
+	accessToken, err := auth.MakeJWT(user.ID, cfg.JwtSecret, accessTokenExpiry)
+	if err != nil {
+		// Failed to create access token
+		RespondWithError(w, http.StatusInternalServerError, "something went wrong")
+		return
+	}
+
+	res := LoginResponse{
+		ID:           user.ID.String(),
+		Username:     user.Username,
+		Email:        user.Email,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	RespondWithJSON(w, http.StatusOK, res)
 }

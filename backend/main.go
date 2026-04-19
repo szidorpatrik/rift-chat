@@ -41,8 +41,8 @@ func main() {
 	// Admin endpoints
 
 	// Auth endpoints
-	//mux.Handle("POST /users", cfg.AuthMiddleware(http.HandlerFunc(cfg.CreateUserHandler)))
 	mux.HandleFunc("POST /users", cfg.CreateUserHandler)
+	mux.HandleFunc("POST /login", cfg.LoginHandler)
 	// User endpoints
 
 	// Middlewares

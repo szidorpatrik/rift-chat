@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -54,10 +55,17 @@ func GetAPIKey(headers http.Header) (string, error) {
 	return apiKey, nil
 }
 
-func MakeRefreshToken() string {
+// Returns a new Refresh token and its hash
+func MakeRefreshToken() (token string, hash string) {
 	slice := make([]byte, 32)
 	rand.Read(slice)
-	return hex.EncodeToString(slice)
+	return hex.EncodeToString(slice), HashRefreshToken(slice)
+}
+
+func HashRefreshToken(token []byte) string {
+	hasher := crypto.SHA256.New()
+	hasher.Write([]byte(token))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 func MakeJWT(userId uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
@@ -73,6 +81,9 @@ func MakeJWT(userId uuid.UUID, tokenSecret string, expiresIn time.Duration) (str
 func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	claims := jwt.RegisteredClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
 		return []byte(tokenSecret), nil
 	})
 

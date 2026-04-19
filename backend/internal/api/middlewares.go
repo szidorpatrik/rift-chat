@@ -23,7 +23,7 @@ func (rec *statusRecorder) WriteHeader(code int) {
 
 type contextKey struct{}
 
-var userContextKey = contextKey{}
+var userContextKey = "userID"
 
 var publicEndpoints = []string{
 	"/favicon.ico",
@@ -42,13 +42,7 @@ func (cfg *ApiConfig) AuthMiddleware(next http.Handler) http.Handler {
 			RespondWithError(w, http.StatusForbidden, err.Error())
 			return
 		}
-		currentUser, err := cfg.DbQueries.GetUserById(r.Context(), userId)
-		if err != nil {
-			RespondWithError(w, http.StatusUnauthorized, "user not found")
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), userContextKey, currentUser)
+		ctx := context.WithValue(r.Context(), userContextKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -116,6 +116,32 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	return i, err
 }
 
+const getUserByUsernameOrEmail = `-- name: GetUserByUsernameOrEmail :one
+SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at, deleted_at FROM users WHERE username = $1 OR email = $2
+`
+
+type GetUserByUsernameOrEmailParams struct {
+	Username string
+	Email    string
+}
+
+func (q *Queries) GetUserByUsernameOrEmail(ctx context.Context, arg GetUserByUsernameOrEmailParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsernameOrEmail, arg.Username, arg.Email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.AvatarUrl,
+		&i.Status,
+		&i.PasswordHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getUsers = `-- name: GetUsers :many
 SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at, deleted_at FROM users
 `
