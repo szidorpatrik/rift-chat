@@ -2,13 +2,11 @@ package api
 
 import (
 	"context"
-	"log"
-	"net"
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/auth"
-	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 )
 
 type statusRecorder struct {
@@ -16,20 +14,13 @@ type statusRecorder struct {
 	status int
 }
 
-func (rec *statusRecorder) WriteHeader(code int) {
-	rec.status = code
-	rec.ResponseWriter.WriteHeader(code)
-}
-
-type contextKey struct{}
-
 var userContextKey = "userID"
-
 var publicEndpoints = []string{
 	"/favicon.ico",
 	"/healthz",
 }
 
+// AuthMiddleware checks for a valid JWT access token in the Authorization header and extracts the user ID
 func (cfg *ApiConfig) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, err := auth.GetBearerToken(r.Header)
@@ -47,6 +38,7 @@ func (cfg *ApiConfig) AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// LoggingMiddleware logs incoming requests with IP, user ID (if authenticated), method, path, and response status
 func (cfg *ApiConfig) LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		for _, path := range publicEndpoints {
@@ -62,17 +54,11 @@ func (cfg *ApiConfig) LoggingMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(recorder, r)
 
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			ip = r.RemoteAddr
-		}
-
-		user, ok := r.Context().Value(userContextKey).(database.User)
+		userId, ok := r.Context().Value(userContextKey).(uuid.UUID)
 		if !ok {
-			user = database.User{Username: "Guest"}
+			userId = uuid.Nil
 		}
 
-		log.Printf("IP: %s | User: %s | Method: %s | Path: %s | Status: %d",
-			ip, user.Username, r.Method, r.URL.Path, recorder.status)
+		cfg.Logger.Info("Request", "ip", r.RemoteAddr, "user", userId, "method", r.Method, "path", r.URL.Path, "status", recorder.status)
 	})
 }

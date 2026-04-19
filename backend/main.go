@@ -12,6 +12,7 @@ import (
 
 func main() {
 	cfg := &api.ApiConfig{}
+	cfg.InitializeLogger()
 
 	if err := cfg.LoadEnvs(); err != nil {
 		log.Fatalf("Failed to load environment variables: %v", err)

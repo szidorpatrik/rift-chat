@@ -3,8 +3,11 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
+	"net"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/sql/schema"
@@ -28,7 +31,7 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	}
 
 	requiredEnvs := []string{
-		"BACKEND_HTTP_PORT", "BACKEND_QUIC_PORT","BACKEND_LISTEN_ADDR", 
+		"BACKEND_HTTP_PORT", "BACKEND_QUIC_PORT", "BACKEND_LISTEN_ADDR",
 		"BACKEND_JWT_SECRET", "BACKEND_VALKEY_URL", "BACKEND_DATABASE_URL",
 	}
 
@@ -87,4 +90,25 @@ func (cfg *ApiConfig) RunMigrations() error {
 	}
 
 	return nil
+}
+
+func (cfg *ApiConfig) InitializeLogger() {
+	cfg.Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: false,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey && len(groups) == 0 {
+				if t, ok := a.Value.Any().(time.Time); ok {
+					return slog.Time(slog.TimeKey, t.UTC())
+				}
+			}
+			if a.Key == "ip" && a.Value.Kind() == slog.KindString {
+				ipStr := a.Value.String()
+				// Split host and port, and keep only the host part (IP)
+				if host, _, err := net.SplitHostPort(ipStr); err == nil {
+					return slog.String("ip", host)
+				}
+			}
+			return a
+		},
+	}))
 }

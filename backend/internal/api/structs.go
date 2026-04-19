@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
@@ -15,6 +16,7 @@ type ApiConfig struct {
 	FullAddress string
 	ValkeyUrl   string
 	JwtSecret   string
+	Logger      *slog.Logger
 }
 
 type RespondError struct {

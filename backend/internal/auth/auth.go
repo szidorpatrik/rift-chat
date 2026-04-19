@@ -22,6 +22,7 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 	return argon2id.ComparePasswordAndHash(password, hash)
 }
 
+// Extracts Bearer token from the Authorization header in the format "Bearer <key>"
 func GetBearerToken(headers http.Header) (string, error) {
 	authHeader := headers.Get("Authorization")
 	if authHeader == "" {
@@ -40,6 +41,7 @@ func GetBearerToken(headers http.Header) (string, error) {
 	return token, nil
 }
 
+// Extracts the API key from the Authorization header in the format "ApiKey <key>"
 func GetAPIKey(headers http.Header) (string, error) {
 	authHeader := headers.Get("Authorization")
 	if authHeader == "" {
@@ -62,12 +64,14 @@ func MakeRefreshToken() (token string, hash string) {
 	return hex.EncodeToString(slice), HashRefreshToken(slice)
 }
 
+// Hashes the refresh token using SHA256
 func HashRefreshToken(token []byte) string {
 	hasher := crypto.SHA256.New()
 	hasher.Write([]byte(token))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
+// Creates a JWT access token with the user ID as the subject and the specified expiration time
 func MakeJWT(userId uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Issuer:    "rift-chat-access",
@@ -78,6 +82,7 @@ func MakeJWT(userId uuid.UUID, tokenSecret string, expiresIn time.Duration) (str
 	return token.SignedString([]byte(tokenSecret))
 }
 
+// Validates the JWT and returns the user ID if valid, or an error if invalid
 func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	claims := jwt.RegisteredClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (any, error) {
