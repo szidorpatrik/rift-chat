@@ -15,7 +15,7 @@ type LogEntry struct {
 
 // LogBatcher manages the async queue and database flushing
 type LogBatcher struct {
-	logChannel chan LogEntry
+	logChannel chan string
 	db         *database.Queries
 	batchSize  int
 	timeout    time.Duration

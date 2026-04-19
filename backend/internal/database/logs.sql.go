@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"time"
 
 	"github.com/lib/pq"
 )
@@ -15,16 +14,14 @@ import (
 const bulkInsertJSONLogs = `-- name: BulkInsertJSONLogs :exec
 INSERT INTO api_logs (created_at, log_data)
 SELECT 
-    unnest($1::timestamptz[]), 
-    CAST(unnest($2::text[]) AS jsonb)
+    (COALESCE(parsed.log_json->>'time', NOW()::text))::timestamptz, 
+    parsed.log_json
+FROM (
+    SELECT CAST(unnest($1::text[]) AS jsonb) AS log_json
+) parsed
 `
 
-type BulkInsertJSONLogsParams struct {
-	Times      []time.Time
-	LogRecords []string
-}
-
-func (q *Queries) BulkInsertJSONLogs(ctx context.Context, arg BulkInsertJSONLogsParams) error {
-	_, err := q.db.ExecContext(ctx, bulkInsertJSONLogs, pq.Array(arg.Times), pq.Array(arg.LogRecords))
+func (q *Queries) BulkInsertJSONLogs(ctx context.Context, logRecords []string) error {
+	_, err := q.db.ExecContext(ctx, bulkInsertJSONLogs, pq.Array(logRecords))
 	return err
 }
