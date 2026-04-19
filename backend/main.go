@@ -5,22 +5,21 @@ import (
 	"log"
 	"net/http"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/api"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
-	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
 	cfg := &api.ApiConfig{}
-	cfg.InitializeLogger()
 
 	if err := cfg.LoadEnvs(); err != nil {
 		log.Fatalf("Failed to load environment variables: %v", err)
 	}
 
 	if err := cfg.RunMigrations(); err != nil {
-        log.Fatalf("Migration failed: %v", err)
-    }
+		log.Fatalf("Migration failed: %v", err)
+	}
 
 	db, err := sql.Open("pgx", cfg.DbUrl)
 	if err != nil {
@@ -33,6 +32,8 @@ func main() {
 
 	dbQueries := database.New(db)
 	cfg.DbQueries = dbQueries
+
+	cfg.InitializeLogger()
 
 	mux := http.NewServeMux()
 
@@ -49,7 +50,7 @@ func main() {
 	// Middlewares
 	loggedRouter := cfg.LoggingMiddleware(mux)
 	httpServer := &http.Server{
-		Handler: loggedRouter, 
+		Handler: loggedRouter,
 		Addr:    cfg.FullAddress,
 	}
 

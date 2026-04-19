@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
+	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/logger"
 )
 
 type ApiConfig struct {
@@ -17,6 +18,7 @@ type ApiConfig struct {
 	ValkeyUrl   string
 	JwtSecret   string
 	Logger      *slog.Logger
+	LogBatcher  *logger.LogBatcher
 }
 
 type RespondError struct {

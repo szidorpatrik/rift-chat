@@ -6,11 +6,18 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	uuid "github.com/google/uuid"
 	models "github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/models"
 )
+
+type ApiLog struct {
+	ID        int64
+	CreatedAt time.Time
+	LogData   json.RawMessage
+}
 
 type Channel struct {
 	ID        uuid.UUID

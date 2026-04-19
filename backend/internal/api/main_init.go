@@ -1,8 +1,10 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"os"
@@ -10,11 +12,15 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/logger"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/sql/schema"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 )
+
+const logBatcherSize = 100
+const logBatcherFlushTimer = 5 * time.Second
 
 func (cfg *ApiConfig) LoadEnvs() error {
 	platform := os.Getenv("BACKEND_PLATFORM")
@@ -93,18 +99,27 @@ func (cfg *ApiConfig) RunMigrations() error {
 }
 
 func (cfg *ApiConfig) InitializeLogger() {
-	cfg.Logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	logBatcher := logger.NewLogBatcher(cfg.DbQueries, logBatcherSize, logBatcherFlushTimer)
+	go logBatcher.StartWorker(context.Background())
+	cfg.LogBatcher = logBatcher
+
+	dbWriter := logger.NewBatchWriter(cfg.LogBatcher)
+
+	// Send logs to the terminal and the DB
+	multiWriter := io.MultiWriter(os.Stdout, dbWriter)
+
+	cfg.Logger = slog.New(slog.NewJSONHandler(multiWriter, &slog.HandlerOptions{
 		AddSource: false,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			// Force UTC timestamp
 			if a.Key == slog.TimeKey && len(groups) == 0 {
 				if t, ok := a.Value.Any().(time.Time); ok {
 					return slog.Time(slog.TimeKey, t.UTC())
 				}
 			}
+			// Strip port from IP addresses
 			if a.Key == "ip" && a.Value.Kind() == slog.KindString {
-				ipStr := a.Value.String()
-				// Split host and port, and keep only the host part (IP)
-				if host, _, err := net.SplitHostPort(ipStr); err == nil {
+				if host, _, err := net.SplitHostPort(a.Value.String()); err == nil {
 					return slog.String("ip", host)
 				}
 			}

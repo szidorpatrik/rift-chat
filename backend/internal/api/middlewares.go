@@ -14,7 +14,7 @@ type statusRecorder struct {
 	status int
 }
 
-var userContextKey = "userID"
+const userContextKey = "userID"
 var publicEndpoints = []string{
 	"/favicon.ico",
 	"/healthz",
@@ -59,6 +59,6 @@ func (cfg *ApiConfig) LoggingMiddleware(next http.Handler) http.Handler {
 			userId = uuid.Nil
 		}
 
-		cfg.Logger.Info("Request", "ip", r.RemoteAddr, "user", userId, "method", r.Method, "path", r.URL.Path, "status", recorder.status)
+		cfg.Logger.Info("request", "ip", r.RemoteAddr, "user", userId, "method", r.Method, "path", r.URL.Path, "status", recorder.status)
 	})
 }

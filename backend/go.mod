@@ -4,7 +4,10 @@ go 1.26.1
 
 require github.com/pressly/goose/v3 v3.27.0
 
-require github.com/wagslane/go-password-validator v0.3.0 // indirect
+require (
+	github.com/lib/pq v1.12.3 // indirect
+	github.com/wagslane/go-password-validator v0.3.0 // indirect
+)
 
 require (
 	github.com/alexedwards/argon2id v1.0.0

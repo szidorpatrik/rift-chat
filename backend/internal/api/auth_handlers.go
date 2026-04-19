@@ -65,14 +65,13 @@ func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	createdUser, err := cfg.DbQueries.CreateUser(r.Context(), params)
 	if err != nil {
 		cfg.Logger.Error("failed to create user in database", "error", err.Error())
-		RespondWithError(w, http.StatusInternalServerError, "failed to create user")
+		RespondWithError(w, http.StatusInternalServerError, "something went wrong")
 		return
 	}
 
 	cfg.Logger.Info("user registered successfully",
 		"event", "user_registration",
 		"user_id", createdUser.ID,
-		"username", createdUser.Username,
 		"ip", r.RemoteAddr,
 	)
 
@@ -149,7 +148,6 @@ func (cfg *ApiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		"event", "user_login",
 		"ip", r.RemoteAddr,
 		"user_id", user.ID,
-		"username", user.Username,
 	)
 
 	res := LoginResponse{
