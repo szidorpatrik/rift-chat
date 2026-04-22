@@ -15,6 +15,7 @@ type statusRecorder struct {
 }
 
 const userContextKey = "userID"
+
 var publicEndpoints = []string{
 	"/favicon.ico",
 	"/healthz",
@@ -23,16 +24,18 @@ var publicEndpoints = []string{
 // AuthMiddleware checks for a valid JWT access token in the Authorization header and extracts the user ID
 func (cfg *ApiConfig) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, err := auth.GetBearerToken(r.Header)
+		cookie, err := r.Cookie("access_token")
 		if err != nil {
-			RespondWithError(w, http.StatusForbidden, err.Error())
+			RespondWithError(w, http.StatusUnauthorized, "missing authentication cookie")
 			return
 		}
-		userId, err := auth.ValidateJWT(token, cfg.JwtSecret)
+
+		userId, err := auth.ValidateJWT(cookie.Value, cfg.JwtSecret)
 		if err != nil {
-			RespondWithError(w, http.StatusForbidden, err.Error())
+			RespondWithError(w, http.StatusUnauthorized, "invalid or expired token")
 			return
 		}
+
 		ctx := context.WithValue(r.Context(), userContextKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -59,6 +62,18 @@ func (cfg *ApiConfig) LoggingMiddleware(next http.Handler) http.Handler {
 			userId = uuid.Nil
 		}
 
-		cfg.Logger.Info("request", "ip", r.RemoteAddr, "user", userId, "method", r.Method, "path", r.URL.Path, "status", recorder.status)
+		cfg.Logger.Info("http request",
+			"event", EventHTTPRequest.String(),
+			"ip", r.RemoteAddr,
+			"user_id", userId,
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", recorder.status,
+		)
 	})
+}
+
+func (r *statusRecorder) WriteHeader(status int) {
+	r.status = status
+	r.ResponseWriter.WriteHeader(status)
 }

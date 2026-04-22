@@ -2,13 +2,18 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/api"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 )
+
+const apiRoot = "/api"
+const apiVersion = "v1"
 
 func main() {
 	cfg := &api.ApiConfig{}
@@ -37,17 +42,20 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Healthcheck endpoint
-	mux.HandleFunc("/healthz", cfg.HealthzHandler)
+	// SYSTEM ENDPOINTS
+	mux.HandleFunc("GET /healthz", cfg.HealthzHandler)
 
-	// Admin endpoints
+	// PUBLIC API ENDPOINTS
+	mux.HandleFunc(newEndpoint("POST", "/users"), cfg.CreateUserHandler)
+	mux.HandleFunc(newEndpoint("POST", "/login"), cfg.LoginHandler)
+	mux.HandleFunc(newEndpoint("POST", "/refresh"), cfg.RefreshTokenHandler)
 
-	// Auth endpoints
-	mux.HandleFunc("POST /users", cfg.CreateUserHandler)
-	mux.HandleFunc("POST /login", cfg.LoginHandler)
-	// User endpoints
+	// PROTECTED API ENDPOINTS
 
-	// Middlewares
+	revokeHandler := http.HandlerFunc(cfg.RevokeTokenHandler)
+	mux.Handle(newEndpoint("POST", "/auth/revoke"), cfg.AuthMiddleware(revokeHandler))
+
+	// SERVER SETUP
 	loggedRouter := cfg.LoggingMiddleware(mux)
 	httpServer := &http.Server{
 		Handler: loggedRouter,
@@ -57,4 +65,9 @@ func main() {
 	// Start the server
 	log.Printf("rift-chat api listening on :%v\n", httpServer.Addr)
 	log.Fatal(httpServer.ListenAndServe())
+}
+
+func newEndpoint(httpMethod, path string) string {
+	clearedPath := strings.TrimPrefix(path, "/")
+	return fmt.Sprintf("%s %s/%s/%s", httpMethod, apiRoot, apiVersion, clearedPath)
 }

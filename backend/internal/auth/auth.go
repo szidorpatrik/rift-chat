@@ -61,7 +61,8 @@ func GetAPIKey(headers http.Header) (string, error) {
 func MakeRefreshToken() (token string, hash string) {
 	slice := make([]byte, 32)
 	rand.Read(slice)
-	return hex.EncodeToString(slice), HashRefreshToken(slice)
+	tokenString := hex.EncodeToString(slice)
+	return tokenString, HashRefreshToken([]byte(tokenString))
 }
 
 // Hashes the refresh token using SHA256

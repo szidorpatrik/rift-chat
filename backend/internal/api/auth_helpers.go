@@ -15,7 +15,7 @@ import (
 
 const minEntropyBits = 60
 
-func (cfg *ApiConfig) validateLoginRequest(req LoginRequest) (int, error) {
+func (cfg *ApiConfig) validateLoginRequest(req LoginRequest) (status_code int, err error) {
 	if req.Username == "" {
 		return http.StatusBadRequest, fmt.Errorf("username is required")
 	}
@@ -28,7 +28,7 @@ func (cfg *ApiConfig) validateLoginRequest(req LoginRequest) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (cfg *ApiConfig) checkUserExists(req CreateUserRequest, ctx context.Context) (int, error) {
+func (cfg *ApiConfig) checkUserExists(req CreateUserRequest, ctx context.Context) (status_code int, err error) {
 	params := database.GetUserByUsernameOrEmailParams{
 		Username: req.Username,
 		Email:    req.Email,
@@ -47,7 +47,7 @@ func (cfg *ApiConfig) checkUserExists(req CreateUserRequest, ctx context.Context
 	return http.StatusOK, nil
 }
 
-func validateCreateUserRequest(req CreateUserRequest) (int, error) {
+func validateCreateUserRequest(req CreateUserRequest) (status_code int, err error) {
 	if req.Username == "" || req.Password == "" || req.Email == "" {
 		return http.StatusBadRequest, fmt.Errorf("username, email, and password are required")
 	}
@@ -63,21 +63,29 @@ func validateCreateUserRequest(req CreateUserRequest) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (cfg *ApiConfig) validateRefreshToken(ctx context.Context, userId uuid.UUID, rawRefreshToken string) (database.RefreshToken, int, error) {
+func (cfg *ApiConfig) validateRefreshToken(ctx context.Context, userId uuid.UUID, rawRefreshToken string) (status_code int, err error) {
 	if rawRefreshToken == "" {
-		return database.RefreshToken{}, http.StatusUnauthorized, fmt.Errorf("invalid refresh token")
+		return http.StatusUnauthorized, fmt.Errorf("invalid refresh token")
 	}
 
 	hashedToken := auth.HashRefreshToken([]byte(rawRefreshToken))
 	token, err := cfg.DbQueries.GetRefreshTokenByToken(ctx, hashedToken)
 	if err != nil {
-		return database.RefreshToken{}, http.StatusInternalServerError, fmt.Errorf("something went wrong")
+		if err == sql.ErrNoRows {
+			return http.StatusUnauthorized, fmt.Errorf("invalid refresh token")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("something went wrong")
 	}
 
-    if !checkRefreshTokenValid(token) {
-        return database.RefreshToken{}, http.StatusUnauthorized, fmt.Errorf("refresh token expired or revoked")
-    }
-    return token, http.StatusOK, nil
+	if token.UserID != userId {
+		return http.StatusUnauthorized, fmt.Errorf("invalid refresh token")
+	}
+
+	if !checkRefreshTokenValid(token) {
+		return http.StatusUnauthorized, fmt.Errorf("refresh token expired or revoked")
+	}
+
+	return http.StatusOK, nil
 }
 
 func checkRefreshTokenValid(token database.RefreshToken) bool {
