@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       PGDATA: /var/lib/postgresql/18/docker
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - ./postgres/data:/var/lib/postgresql/18/docker
     healthcheck:
@@ -17,17 +17,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - riftchat_network
-
-  valkey:
-    image: valkey/valkey:alpine
-    container_name: ${VALKEY_CONTAINER_NAME}
-    restart: unless-stopped
-    ports:
-      - "${VALKEY_PORT}:${VALKEY_PORT}"
-    volumes:
-      - valkeydata:/data
     networks:
       - riftchat_network
 
@@ -76,7 +65,7 @@ services:
       - "${VITE_FRONTEND_PORT}:${VITE_FRONTEND_PORT}"
     depends_on:
       backend:
-          condition: service_healthy
+        condition: service_healthy
     networks:
       - riftchat_network
 
