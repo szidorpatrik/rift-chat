@@ -2,5 +2,7 @@ go-server
 riftchat-api
 out/
 .idea/
+certs/
 .env
 .env-dev
+tmp/
