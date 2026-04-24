@@ -49,11 +49,9 @@ func main() {
 	mux.HandleFunc(newEndpoint("POST", "/users"), cfg.CreateUserHandler)
 	mux.HandleFunc(newEndpoint("POST", "/login"), cfg.LoginHandler)
 	mux.HandleFunc(newEndpoint("POST", "/refresh"), cfg.RefreshTokenHandler)
+	mux.HandleFunc(newEndpoint("POST", "/revoke"), cfg.RevokeTokenHandler)
 
 	// PROTECTED API ENDPOINTS
-
-	revokeHandler := http.HandlerFunc(cfg.RevokeTokenHandler)
-	mux.Handle(newEndpoint("POST", "/auth/revoke"), cfg.AuthMiddleware(revokeHandler))
 
 	// SERVER SETUP
 	loggedRouter := cfg.LoggingMiddleware(mux)
@@ -63,7 +61,7 @@ func main() {
 	}
 
 	// Start the server
-	log.Printf("rift-chat api listening on :%v\n", httpServer.Addr)
+	log.Printf("rift-chat api listening on: %v\n", httpServer.Addr)
 	log.Fatal(httpServer.ListenAndServe())
 }
 
