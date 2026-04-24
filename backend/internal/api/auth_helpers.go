@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -90,4 +91,69 @@ func (cfg *ApiConfig) validateRefreshToken(ctx context.Context, userId uuid.UUID
 
 func checkRefreshTokenValid(token database.RefreshToken) bool {
 	return !token.RevokedAt.Valid && !token.ExpiresAt.Before(time.Now())
+}
+
+// Creates a cookie for JWTs and refresh tokens
+func (cfg *ApiConfig) setAuthCookie(w http.ResponseWriter, name, value string, duration time.Duration) {
+	isSecure := cfg.Platform == "production" || cfg.Platform == "prod"
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     "/",
+		MaxAge:   int(duration.Seconds()),
+		HttpOnly: true,
+		Secure:   isSecure,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+
+// Overwrites an existing cookie to instantly expire it
+func (cfg *ApiConfig) clearAuthCookie(w http.ResponseWriter, name string) {
+	isSecure := cfg.Platform == "production" || cfg.Platform == "prod"
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   isSecure,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+
+func (cfg *ApiConfig) handleAuthError(w http.ResponseWriter, r *http.Request, code int, msg string, err error, event EventType, isError bool, shouldRespondErrMsg bool, extraArgs ...any) {
+	args := append([]any{
+		"event", event.String(),
+		"ip", r.RemoteAddr,
+		"error", err.Error(),
+	}, extraArgs...)
+
+	if isError {
+		cfg.Logger.Error(msg, args...)
+	} else {
+		cfg.Logger.Warn(msg, args...)
+	}
+
+	if EventType(code) == EventDbError || !shouldRespondErrMsg {
+		msg = "something went wrong"
+	}
+
+	RespondWithError(w, code, msg)
+}
+
+// Reads the JSON body into a generic struct T, then runs the provided validation function.
+func decodeAndValidate[T any](r *http.Request, validator func(T) (int, error)) (T, int, error) {
+	var req T
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return req, http.StatusBadRequest, fmt.Errorf("malformed json: %w", err)
+	}
+
+	if code, err := validator(req); err != nil {
+		return req, code, err
+	}
+
+	return req, http.StatusOK, nil
 }

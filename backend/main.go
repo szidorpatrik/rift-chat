@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,7 +8,6 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/api"
-	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 )
 
 const apiRoot = "/api"
@@ -22,21 +20,15 @@ func main() {
 		log.Fatalf("Failed to load environment variables: %v", err)
 	}
 
+	if err := cfg.InitializeDatabase(); err != nil {
+		log.Fatalf("Database initialization failed:\n\t %v", err)
+	} else {
+		defer cfg.DB.Close()
+	}
+
 	if err := cfg.RunMigrations(); err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
-
-	db, err := sql.Open("pgx", cfg.DbUrl)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-		return
-	} else {
-		log.Println("Successfully connected to the database")
-	}
-	defer db.Close()
-
-	dbQueries := database.New(db)
-	cfg.DbQueries = dbQueries
 
 	cfg.InitializeLogger()
 
@@ -65,6 +57,7 @@ func main() {
 	log.Fatal(httpServer.ListenAndServe())
 }
 
+// Returns a string in the format "METHOD /api/VERSION/path"
 func newEndpoint(httpMethod, path string) string {
 	clearedPath := strings.TrimPrefix(path, "/")
 	return fmt.Sprintf("%s %s/%s/%s", httpMethod, apiRoot, apiVersion, clearedPath)

@@ -3,11 +3,13 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	res := RespondError{
-		Error: msg,
+		Error:      msg,
 		StatusCode: code,
 	}
 	payload, err := json.Marshal(res)
@@ -29,4 +31,31 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
 		return
 	}
 	w.Write(payloadBytes)
+}
+
+func (cfg *ApiConfig) LogError(r *http.Request, err error, event EventType, extraArgs ...any) {
+	args := append([]any{
+		"event", event.String(),
+		"ip", r.RemoteAddr,
+		"error", err.Error(),
+	}, extraArgs...)
+	cfg.Logger.Error(err.Error(), args...)
+}
+
+func (cfg *ApiConfig) LogInfo(r *http.Request, msg string, userId uuid.UUID, event EventType, extraArgs ...any) {
+	args := append([]any{
+		"event", event.String(),
+		"user_id", userId.String(),
+		"ip", r.RemoteAddr,
+	}, extraArgs...)
+	cfg.Logger.Info(msg, args...)
+}
+
+func (cfg *ApiConfig) LogWarn(r *http.Request, msg string, userId uuid.UUID, event EventType, extraArgs ...any) {
+	args := append([]any{
+		"event", event.String(),
+		"user_id", userId.String(),
+		"ip", r.RemoteAddr,
+	}, extraArgs...)
+	cfg.Logger.Warn(msg, args...)
 }

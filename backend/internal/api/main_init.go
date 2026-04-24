@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"net"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/logger"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/sql/schema"
 
@@ -28,10 +30,10 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	switch platform {
 	case "", "dev", "development":
 		envFile := ".env-dev"
-		fmt.Printf("=== RUNNING IN DEVELOPMENT MODE, LOADING '%s' ===\n", envFile)
+		log.Default().Printf("=== RUNNING IN DEVELOPMENT MODE, LOADING '%s' ===\n", envFile)
 		godotenv.Overload(envFile)
 	case "prod", "production":
-		fmt.Println("=== RUNNING IN PRODUCTION MODE ===")
+		log.Default().Println("=== RUNNING IN PRODUCTION MODE ===")
 	default:
 		return fmt.Errorf("=== UNKNOWN BACKEND_PLATFORM '%s': Check './backend/.env' if running locally or './.env' if running via docker compose ===\n", platform)
 	}
@@ -77,8 +79,7 @@ func (cfg *ApiConfig) LoadEnvs() error {
 }
 
 func (cfg *ApiConfig) RunMigrations() error {
-	fmt.Println("=== RUNNING DATABASE MIGRATIONS ===")
-
+	log.Default().Println("=== RUNNING DATABASE MIGRATIONS ===")
 	db, err := sql.Open("pgx", cfg.DbUrl)
 	if err != nil {
 		return fmt.Errorf("failed to open database for migrations: %w", err)
@@ -94,7 +95,16 @@ func (cfg *ApiConfig) RunMigrations() error {
 	if err := goose.Up(db, "."); err != nil {
 		return fmt.Errorf("failed to run goose up: %w", err)
 	}
+	return nil
+}
 
+func (cfg *ApiConfig) InitializeDatabase() error {
+	db, err := sql.Open("pgx", cfg.DbUrl)
+	if err != nil {
+		return fmt.Errorf("Failed to connect to database: %v", err)
+	}
+	cfg.DB = db
+	cfg.DbQueries = database.New(db)
 	return nil
 }
 

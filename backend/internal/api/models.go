@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"log/slog"
 	"time"
 
@@ -14,6 +15,7 @@ type ApiConfig struct {
 	Platform    string
 	DbUrl       string
 	DbQueries   *database.Queries
+	DB          *sql.DB
 	FullAddress string
 	ValkeyUrl   string
 	JwtSecret   string
