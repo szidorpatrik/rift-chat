@@ -2,6 +2,10 @@
 
 A next-generation, fully open-source chat application built for the modern web.
 
+## Endpoints
+
+For detailed API documentation, please refer to [API Documentation](docs/api.md).
+
 ## Development
 
 ### Prerequisites
