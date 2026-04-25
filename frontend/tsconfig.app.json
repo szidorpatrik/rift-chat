@@ -11,7 +11,9 @@
       ],
       "@/*": ["./src/*"],
       "@types": ["./src/types.ts"],
+      "@api": ["./src/utils/api.ts"],
       "@router": ["./src/router/index.ts"],
+      "@utils/*": ["./src/utils/*"],
       "@components/*": ["./src/components/*"],
       "@ui/*": ["./src/components/ui/*"],
       "@assets/*": ["./src/assets/*"],
@@ -23,7 +25,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "auto-imports.d.ts", "components.d.ts"]
 }

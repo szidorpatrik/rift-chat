@@ -18,6 +18,8 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@types': fileURLToPath(new URL('./src/types.ts', import.meta.url)),
+      '@api': fileURLToPath(new URL('./src/utils/api.ts', import.meta.url)),
+      '@utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
       '@router': fileURLToPath(new URL('./src/router/index.ts', import.meta.url)),
       '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
       '@ui': fileURLToPath(new URL('./src/components/ui', import.meta.url)),
