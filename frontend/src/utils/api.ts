@@ -12,14 +12,32 @@ export async function apiFetch<TResponse>(
     try {
         const url = `/api/v1${endpoint}`
         
-        const res = await fetch(url, {
+        const fetchConfig: RequestInit = {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers,
             },
             credentials: 'include',
-        })
+        }
+
+        // Initial request
+        let res = await fetch(url, fetchConfig)
+
+        // If it fails with 401, try to refresh
+        if (res.status === 401 && endpoint !== '/login' && endpoint !== '/refresh') {
+            const refreshRes = await fetch('/api/v1/refresh', { 
+                method: 'POST', 
+                credentials: 'include' 
+            })
+
+            if (refreshRes.ok) {
+                res = await fetch(url, fetchConfig)
+            } else {
+                // The refresh token is expired or missing. 
+                // Let it fall through to return the 401 to the component.
+            }
+        }
 
         const result = await res.json()
 

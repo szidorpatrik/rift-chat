@@ -16,13 +16,11 @@ const fields = reactive<AuthFormField[]>([
         name: 'username',
         type: 'text',
         label: 'Username',
-        required: true,
     },
     {
         name: 'password',
         type: 'password',
         label: 'Password',
-        required: true,
     }
 ])
 const schema = z.object({
