@@ -177,13 +177,33 @@ func (cfg *ApiConfig) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 		UserID: dbToken.UserID,
 		Token:  newHashedRefreshToken,
 	}
-	if _, err := cfg.DbQueries.CreateRefreshToken(r.Context(), createParams); err != nil {
+
+	// Start a transaction
+	tx, err := cfg.DB.BeginTx(r.Context(), nil)
+	if err != nil {
+		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to begin database transaction", err, EventDbError, true, false, "user_id", dbToken.UserID)
+		return
+	}
+
+	// If a return happens early, it rolls back
+	defer tx.Rollback()
+
+	// Bind the sqlc queries to this specific transaction
+	qtx := cfg.DbQueries.WithTx(tx)
+
+	if _, err := qtx.CreateRefreshToken(r.Context(), createParams); err != nil {
 		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to create new refresh token during rotation", err, EventDbError, true, false, "user_id", dbToken.UserID)
 		return
 	}
 
-	if err := cfg.DbQueries.RevokeRefreshToken(r.Context(), hashedToken); err != nil {
+	if err := qtx.RevokeRefreshToken(r.Context(), hashedToken); err != nil {
 		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to revoke old refresh token during rotation", err, EventDbError, true, false, "user_id", dbToken.UserID)
+		return
+	}
+
+	// If both queries succeed, commit to the database
+	if err := tx.Commit(); err != nil {
+		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to commit token rotation transaction", err, EventDbError, true, false, "user_id", dbToken.UserID)
 		return
 	}
 
