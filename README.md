@@ -1,69 +1,43 @@
-# RiftChat
+# Rift Chat
 
 A next-generation, fully open-source chat application built for the modern web.
 
-## Endpoints
+Rift Chat is designed from the ground up for high performance, strict type safety, and enterprise-grade security, featuring a robust **Go** backend and a lightning-fast **Vue 3** frontend.
 
-For detailed API documentation, please refer to [API Documentation](docs/api.md).
+---
 
-## Development
+## System Architecture & Tech Stack
 
-### Prerequisites
+Rift Chat uses a modern, decoupled monorepo architecture.
 
-- golang
-- air (optional, for hot reloading during development)
-- bun
-- docker
-- docker compose
-- sqlc
-- goose (optional, for manual migrations only)
+**Backend (`/backend`)**
 
-### Backend
+* **Language:** Go 1.22+
+* **Routing:** Native `net/http` ServeMux
+* **Authentication:** Stateless, HTTP-Only JWTs with secure long-lived refresh token rotation.
+* **Database Toolkit:** `sqlc` (Type-safe SQL generation) & `pgx/v5`
+* **Migrations:** `goose` (Embedded and run automatically on startup)
 
-#### API
+**Frontend (`/frontend`)**
 
-To locally run the api:
+* **Framework:** Vue 3 (Composition API) & Vite
+* **State Management:** Pinia
+* **Styling & Components:** TailwindCSS & Nuxt UI
+* **API Client:** Custom generic fetch wrapper with automatic token refresh interception.
 
-```sh
-cd backend
-go run main.go
-```
+**Infrastructure (`docker-compose.yml`)**
 
-For hot reloading during development, you can use `air`:
+* **Database:** PostgreSQL 18
+* **`(WIP)` Caching/PubSub:**  PostgreSQL (using LISTEN/NOTIFY)
 
-Install `air` if you haven't already:
+---
 
-```sh
-go install github.com/air-verse/air@latest
-```
+## Local Development
 
-Then run `air` in the `backend` directory:
+See [`backend`](backend/README.md) and [`frontend`](frontend/README.md) for detailed instructions.
 
-```sh
-cd backend
-air
-```
+## Documentation
 
-#### Database
-
-To generate the database code using `sqlc`, run the following command in the `backend` directory:
-
-```sh
-cd backend
-sqlc generate
-```
-
-Migrations are managed from code. You can use `goose` to run them manually if needed.
-
-By default it always runs the latest migrations on startup.
-
-### Frontend
-
-To locally run the frontend
-Install dependencies and start the development server:
-
-```sh
-cd frontend
-bun install
-bun run dev
-```
+* **[API Documentation](docs/api.md):** Detailed specs on all REST endpoints, request/response bodies, and authentication flows.
+* **[Backend Documentation](backend/README.md):** In-depth details on the Go architecture, context handling, and database generation.
+* **`(WIP)` [Frontend Documentation](frontend/README.md):** Information on the Vue component structure, Pinia state, and routing.
