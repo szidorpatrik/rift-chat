@@ -32,6 +32,48 @@ Rift Chat uses a modern, decoupled monorepo architecture.
 
 ---
 
+## Running the Application
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/szidorpatrik/rift-chat.git && cd rift-chat
+```
+
+### 2. Environment Configuration
+
+```bash
+cp .env-example .env
+```
+
+Look inside `.env` and update the variables as needed. The most important one to change is `BACKEND_JWT_SECRET` and `POSTGRES_PASSWORD` for security reasons. You can generate a random JWT secret with the following command:
+
+```bash
+openssl rand -base64 64
+```
+
+```env
+#...
+POSTGRES_PASSWORD=secretpassword # <- CHANGE THIS! No quotes around passwords!
+#...
+BACKEND_JWT_SECRET=""
+#...
+```
+
+### 3. Start the Application
+
+```bash
+docker compose build && docker compose up -d --force-recreate
+```
+
+### 4. Access the Frontend
+
+Open your browser and navigate to `http://localhost:80/` or `http://127.0.0.1:80/` to see the frontend.
+
+### Production Deployment
+
+When deploying to production, remove all the ports from [compose.yml](docker-compose.yml) except for caddy and set the appropriate environment variables in `.env` to allow the backend to listen on `
+
 ## Local Development
 
 See [`backend`](backend/README.md) and [`frontend`](frontend/README.md) for detailed instructions.

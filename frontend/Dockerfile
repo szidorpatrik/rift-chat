@@ -18,6 +18,6 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.ts ./server.ts
 
-EXPOSE 8080
+EXPOSE 80
 
 CMD ["bun", "run", "server.ts"]

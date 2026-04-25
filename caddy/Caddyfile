@@ -1,0 +1,10 @@
+# Replace '127.0.0.1' with your actual domain name if deploying to production
+http://127.0.0.1 {
+    reverse_proxy /api/* http://backend:8081
+    reverse_proxy * http://frontend:80
+}
+
+http://localhost {
+    reverse_proxy /api/* http://backend:8081
+    reverse_proxy * http://frontend:80
+}

@@ -66,10 +66,11 @@ This file is read by Docker. It configures the containers to talk to each other 
 POSTGRES_CONTAINER_NAME="riftchat_postgres"
 BACKEND_CONTAINER_NAME="riftchat_backend"
 FRONTEND_CONTAINER_NAME="riftchat_frontend"
+CADDY_CONTAINER_NAME="riftchat_caddy"
 
 # --- Database ---
 POSTGRES_USER="riftchat_user"
-POSTGRES_PASSWORD=secretpassword # <- CHANGE THIS! No quotes around passwords!
+POSTGRES_PASSWORD=production-password # <- CHANGE THIS! No quotes around passwords!
 POSTGRES_DB="riftchat_db"
 POSTGRES_PORT="5432"
 POSTGRES_SSLMODE="disable"
@@ -84,9 +85,7 @@ BACKEND_JWT_SECRET=""
 BACKEND_DATABASE_URL="host=${POSTGRES_CONTAINER_NAME} port=${POSTGRES_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=${POSTGRES_SSLMODE}"
 
 # --- Frontend ---
-VITE_API_URL="http://${BACKEND_LISTEN_ADDR}:${BACKEND_HTTP_PORT}"
-VITE_WEBTRANSPORT_URL="https://${BACKEND_LISTEN_ADDR}:${BACKEND_QUIC_PORT}"
-VITE_FRONTEND_PORT="8080"
+FRONTEND_PORT="80"
 ```
 
 **File 2: `backend/.env-dev` (Used by Air / Native Go)**
