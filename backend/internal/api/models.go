@@ -17,7 +17,6 @@ type ApiConfig struct {
 	DbQueries   *database.Queries
 	DB          *sql.DB
 	FullAddress string
-	ValkeyUrl   string
 	JwtSecret   string
 	Logger      *slog.Logger
 	LogBatcher  *logger.LogBatcher

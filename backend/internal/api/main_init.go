@@ -40,7 +40,7 @@ func (cfg *ApiConfig) LoadEnvs() error {
 
 	requiredEnvs := []string{
 		"BACKEND_HTTP_PORT", "BACKEND_QUIC_PORT", "BACKEND_LISTEN_ADDR",
-		"BACKEND_JWT_SECRET", "BACKEND_VALKEY_URL", "BACKEND_DATABASE_URL",
+		"BACKEND_JWT_SECRET", "BACKEND_DATABASE_URL",
 	}
 
 	for _, envKey := range requiredEnvs {
@@ -62,7 +62,6 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	listenAddr := os.Getenv("BACKEND_LISTEN_ADDR")
 	jwtSecret := os.Getenv("BACKEND_JWT_SECRET")
 	dbUrl := os.Getenv("BACKEND_DATABASE_URL")
-	valkeyUrl := os.Getenv("BACKEND_VALKEY_URL")
 
 	httpPortInt, _ := strconv.ParseInt(httpPort, 10, 64)
 	quicPortInt, _ := strconv.ParseInt(quicPort, 10, 64)
@@ -72,7 +71,6 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	cfg.Platform = platform
 	cfg.DbUrl = dbUrl
 	cfg.FullAddress = fmt.Sprintf("%v:%v", listenAddr, httpPort)
-	cfg.ValkeyUrl = valkeyUrl
 	cfg.JwtSecret = jwtSecret
 
 	return nil

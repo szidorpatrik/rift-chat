@@ -69,9 +69,6 @@ services:
     networks:
       - riftchat_network
 
-volumes:
-  valkeydata:
-
 networks:
   riftchat_network:
     driver: bridge
