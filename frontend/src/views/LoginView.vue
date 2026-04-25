@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
+import { apiFetch } from '@api'
+import { useAuthStore } from '@stores/authStore'
 import * as z from 'zod'
+import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
+import type { LoginRequest, LoginResponse } from '@types'
 
 const router = useRouter()
 const toast = useToast()
-const fields = ref<AuthFormField[]>([
+const authStore = useAuthStore()
+
+const fields = reactive<AuthFormField[]>([
     {
         name: 'username',
         type: 'text',
@@ -26,34 +31,29 @@ const schema = z.object({
 })
 type Schema = z.output<typeof schema>
 
-function onSubmit(payload: FormSubmitEvent<Schema>) {
-    const data = JSON.stringify(payload.data)
-    fetch('http://localhost:8080/api/v1/login', {
+const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
+    const req: LoginRequest = {
+        username: payload.data.username,
+        password: payload.data.password,
+    }
+
+    const { data, error } = await apiFetch<LoginResponse>('/login', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: data
-    }).then(async res => {
-        const result = await res.json()
-        if (res.ok) {
-            toast.add({
-                title: 'Login successful',
-                description: `Welcome back, ${result.username}!`,
-            })
-            router.push({ name: 'app' })
-        } else {
-            toast.add({
-                title: 'Login failed',
-                description: result["error"] || 'An unexpected error occurred',
-            })
-        }
-    }).catch(error => {
-        toast.add({
-            title: 'Network Error',
-            description: error.message,
-        })
+        body: JSON.stringify(req)
     })
+
+    if (error) {
+        toast.add({
+            title: 'Login failed',
+            description: error.error,
+            color: 'error'
+        })
+        return
+    }
+
+    authStore.setUser(data!)
+    toast.add({ title: 'Login successful', description: `Welcome back, ${data?.username}!` })
+    router.push({ name: 'app' })
 }
 </script>
 
