@@ -22,25 +22,6 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 	return argon2id.ComparePasswordAndHash(password, hash)
 }
 
-// Extracts Bearer token from the Authorization header in the format "Bearer <key>"
-func GetBearerToken(headers http.Header) (string, error) {
-	authHeader := headers.Get("Authorization")
-	if authHeader == "" {
-		return "", fmt.Errorf("Authorization header missing")
-	}
-
-	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return "", fmt.Errorf("Malformed authorization header")
-	}
-
-	token := strings.TrimPrefix(authHeader, "Bearer ")
-	if token == "" {
-		return "", fmt.Errorf("Bearer token missing")
-	}
-
-	return token, nil
-}
-
 // Extracts the API key from the Authorization header in the format "ApiKey <key>"
 func GetAPIKey(headers http.Header) (string, error) {
 	authHeader := headers.Get("Authorization")

@@ -39,6 +39,10 @@ export async function apiFetch<TResponse>(
             }
         }
 
+        if (res.status === 204) {
+            return { data: null as TResponse, error: null }
+        }
+
         const result = await res.json()
 
         if (res.ok) {

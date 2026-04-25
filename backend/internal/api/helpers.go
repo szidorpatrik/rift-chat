@@ -33,6 +33,10 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
 	w.Write(payloadBytes)
 }
 
+func RespondNoContent(w http.ResponseWriter) {
+    w.WriteHeader(http.StatusNoContent)
+}
+
 func (cfg *ApiConfig) LogError(r *http.Request, err error, event EventType, extraArgs ...any) {
 	args := append([]any{
 		"event", event.String(),

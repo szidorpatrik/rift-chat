@@ -191,7 +191,7 @@ func (cfg *ApiConfig) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 	cfg.setAuthCookie(w, cookieRefreshToken, newRefreshToken, refreshTokenExpiry)
 
 	cfg.LogInfo(r, "access token refreshed", dbToken.UserID, EventAccessTokenRefreshed)
-	RespondWithJSON(w, http.StatusOK, "")
+	RespondNoContent(w)
 }
 
 func (cfg *ApiConfig) RevokeTokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +211,7 @@ func (cfg *ApiConfig) RevokeTokenHandler(w http.ResponseWriter, r *http.Request)
 
 	cfg.LogInfo(r, "refresh token revoked", uuid.Nil, EventRefreshTokenRevoked)
 
-	RespondWithJSON(w, http.StatusOK, "")
+	RespondNoContent(w)
 }
 
 func (cfg *ApiConfig) SessionCheckHandler(w http.ResponseWriter, r *http.Request) {
