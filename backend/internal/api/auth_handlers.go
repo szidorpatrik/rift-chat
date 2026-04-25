@@ -25,7 +25,7 @@ var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]
 func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	req, code, err := decodeAndValidate(r, validateCreateUserRequest)
 	if err != nil {
-		msg := "invalid request body"
+		msg := err.Error()
 		if code != http.StatusBadRequest {
 			msg = "registration validation failed"
 		}
@@ -212,4 +212,31 @@ func (cfg *ApiConfig) RevokeTokenHandler(w http.ResponseWriter, r *http.Request)
 	cfg.LogInfo(r, "refresh token revoked", uuid.Nil, EventRefreshTokenRevoked)
 
 	RespondWithJSON(w, http.StatusOK, "")
+}
+
+func (cfg *ApiConfig) SessionCheckHandler(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(uuid.UUID)
+	if !ok {
+		cfg.handleAuthError(w, r, http.StatusUnauthorized, "invalid session", fmt.Errorf("invalid session"), EventSessionCheckFailed, false, true)
+		return
+	}
+
+	user, err := cfg.DbQueries.GetUserById(r.Context(), userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			cfg.LogWarn(r, "session check failed: user not found", userID, EventSessionCheckFailed)
+			RespondWithError(w, http.StatusUnauthorized, "invalid session")
+			return
+		}
+		cfg.handleAuthError(w, r, http.StatusInternalServerError, "database error during session check", err, EventDbError, true, false, "user_id", userID)
+		return
+	}
+
+	cfg.LogInfo(r, "session check successful", user.ID, EventSessionCheckSuccess)
+	res := LoginResponse{
+		ID:       user.ID.String(),
+		Username: user.Username,
+		Email:    user.Email,
+	}
+	RespondWithJSON(w, http.StatusOK, res)
 }

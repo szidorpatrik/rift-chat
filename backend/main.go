@@ -44,11 +44,14 @@ func main() {
 	mux.HandleFunc(newEndpoint("POST", "/revoke"), cfg.RevokeTokenHandler)
 
 	// PROTECTED API ENDPOINTS
+	sessionCheckHandler := http.HandlerFunc(cfg.SessionCheckHandler)
+	mux.Handle(newEndpoint("GET", "/session"), cfg.RequireAuth(sessionCheckHandler))
 
 	// SERVER SETUP
 	loggedRouter := cfg.LoggingMiddleware(mux)
+	identifiedRouter := cfg.IdentityMiddleware(loggedRouter)
 	httpServer := &http.Server{
-		Handler: loggedRouter,
+		Handler: identifiedRouter,
 		Addr:    cfg.FullAddress,
 	}
 

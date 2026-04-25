@@ -42,7 +42,6 @@ type CreateUserResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// Bearer token is required in Authorization header
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`

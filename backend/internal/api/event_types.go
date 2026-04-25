@@ -22,6 +22,8 @@ var eventName = map[EventType]string{
 	EventRefreshTokenNotFound:       "refresh_token_not_found",
 	EventHTTPRequest:                 "http_request",
 	EventDbError:                     "db_error",
+	EventSessionCheckSuccess:         "session_check_success",
+	EventSessionCheckFailed:          "session_check_failed",
 }
 
 const (
@@ -44,6 +46,8 @@ const (
 	EventRefreshTokenNotFound
 	EventHTTPRequest
 	EventDbError
+	EventSessionCheckSuccess
+	EventSessionCheckFailed
 )
 
 func (e EventType) String() string {
