@@ -110,6 +110,36 @@ Returns basic user info. **Crucially, this endpoint sets `Set-Cookie` headers fo
 
 ---
 
+### Session Check
+
+Verifies the user's active session and returns their profile. Primarily used by the frontend to restore state on page reloads.
+
+* **URL:** `/api/v1/session`
+* **Method:** `GET`
+* **Auth Required:** Yes (Requires valid `access_token` cookie)
+
+**Request Body**
+None.
+
+**Response: `200 OK`**
+Returns the same basic user info as the Login endpoint.
+
+```json
+{
+  "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
+  "username": "test_user",
+  "email": "user@example.com"
+}
+```
+
+**Error Responses**
+
+* `401 Unauthorized`: Missing, invalid, or expired `access_token` cookie.
+* `404 Not Found`: Token is valid, but the user no longer exists in the database.
+* `500 Internal Server Error`: Server failure during database lookup.
+
+---
+
 ### Refresh Tokens
 
 Rotates the session tokens. The frontend should call this when the access token expires.
@@ -121,12 +151,8 @@ Rotates the session tokens. The frontend should call this when the access token 
 **Request Body**
 None.
 
-**Response: `200 OK`**
-Returns an empty string. **This endpoint sets new `Set-Cookie` headers, rotating both the `access_token` and the `refresh_token`.**
-
-```json
-""
-```
+**Response: `204 No Content`**
+Returns no body. **This endpoint sets new `Set-Cookie` headers, rotating both the `access_token` and the `refresh_token`.**
 
 **Error Responses**
 
@@ -141,14 +167,14 @@ Ends the user's session, revokes the refresh token in the database, and clears t
 
 * **URL:** `/api/v1/revoke`
 * **Method:** `POST`
-* **Auth Required:** No authentication required, but expects a valid `refresh_token` cookie to identify the session to revoke.
+* **Auth Required:** No strict authentication required, but expects a valid `refresh_token` cookie to identify the session to revoke.
 
 **Request Body**
 None.
 
-**Response: `200 OK`**
-Returns an empty string. **This endpoint sends `Set-Cookie` headers with `MaxAge: -1` to instantly delete the `access_token` and `refresh_token` cookies on the client.**
+**Response: `204 No Content`**
+Returns no body. **This endpoint sends `Set-Cookie` headers with `MaxAge: -1` to instantly delete the `access_token` and `refresh_token` cookies on the client.**
 
-```json
-""
-```
+**Error Responses**
+
+* `500 Internal Server Error`: Server failure while interacting with the database. (Note: Cookies are still cleared even if the database revocation fails).
