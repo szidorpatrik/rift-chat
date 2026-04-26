@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
         '@utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
         '@router': fileURLToPath(new URL('./src/router/index.ts', import.meta.url)),
         '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
+        '@layouts': fileURLToPath(new URL('./src/layouts', import.meta.url)),
         '@ui': fileURLToPath(new URL('./src/components/ui', import.meta.url)),
         '@views': fileURLToPath(new URL('./src/views', import.meta.url)),
         '@assets': fileURLToPath(new URL('./src/assets', import.meta.url)),

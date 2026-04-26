@@ -1,3 +1,7 @@
+export interface Server { id: string; name: string; avatar?: string }
+export interface Channel { id: string; name: string }
+export interface Message { id: string; author: string; content: string }
+
 export type LoginRequest = {
     username: string,
     password: string,
