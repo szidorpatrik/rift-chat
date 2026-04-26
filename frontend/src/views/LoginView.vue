@@ -16,11 +16,13 @@ const fields = reactive<AuthFormField[]>([
         name: 'username',
         type: 'text',
         label: 'Username',
+        required: true,
     },
     {
         name: 'password',
         type: 'password',
         label: 'Password',
+        required: true,
     }
 ])
 const schema = z.object({
@@ -64,6 +66,11 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
                        class="max-w-md"
                        icon="i-lucide-user"
                        @submit="onSubmit" />
+
+            <div class="text-sm mt-2 flex flex-row gap-1">
+                <span class="text-muted">Don't have an account?</span>
+                <ULink :to="{ name: 'register' }" class="text-secondary">Register</ULink>
+            </div>
         </UPageCard>
     </UContainer>
 </template>
