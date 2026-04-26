@@ -67,7 +67,7 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
                        icon="i-lucide-user"
                        @submit="onSubmit" />
 
-            <div class="text-sm mt-2 flex flex-row gap-1">
+            <div class="text-sm mt-1 flex flex-row gap-1">
                 <span class="text-muted">Don't have an account?</span>
                 <ULink :to="{ name: 'register' }" class="text-secondary">Register</ULink>
             </div>

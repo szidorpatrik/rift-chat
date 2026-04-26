@@ -48,7 +48,7 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const onSubmit= async (payload: FormSubmitEvent<Schema>) => {
+const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
     const req: RegisterRequest = {
         username: payload.data.username,
         email: payload.data.email,
@@ -84,6 +84,11 @@ const onSubmit= async (payload: FormSubmitEvent<Schema>) => {
                        class="max-w-md"
                        icon="i-lucide-user-plus"
                        @submit="onSubmit" />
+
+            <div class="text-sm mt-1 flex flex-row gap-1">
+                <span class="text-muted">Already have an account?</span>
+                <ULink :to="{ name: 'login' }" class="text-secondary">Log in</ULink>
+            </div>
         </UPageCard>
     </UContainer>
 </template>
