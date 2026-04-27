@@ -53,7 +53,10 @@ onMounted(async () => {
                 <ChannelSidebar :channels="channelList" />
             </div>
 
-            <UserProfile :username="authStore.currentUser?.username" />
+            <UserProfile :username="authStore.currentUser?.username"
+                         :description="authStore.currentUser?.description"
+                         :avatar_url="authStore.currentUser?.avatar_url"
+                         :status="authStore.currentUser?.status" />
         </div>
 
         <ChatArea :messages="messageList" />

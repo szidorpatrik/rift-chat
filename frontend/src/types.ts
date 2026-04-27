@@ -11,6 +11,9 @@ export type LoginResponse = {
     id: string,
     username: string,
     email: string,
+    avatar_url?: string,
+    status?: string,
+    description?: string,
 }
 
 export type RegisterRequest = {
