@@ -47,7 +47,10 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email,omitempty"`
+	ID          string `json:"id"`
+	Username    string `json:"username"`
+	Email       string `json:"email,omitempty"`
+	AvatarUrl   string `json:"avatar_url,omitempty"`
+	Status      string `json:"status,omitempty"`
+	Description string `json:"description,omitempty"`
 }

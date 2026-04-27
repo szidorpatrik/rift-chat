@@ -73,4 +73,5 @@ type User struct {
 	CreatedAt    sql.NullTime
 	UpdatedAt    sql.NullTime
 	DeletedAt    sql.NullTime
+	Description  sql.NullString
 }
