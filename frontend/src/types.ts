@@ -11,8 +11,8 @@ export type LoginResponse = {
     id: string,
     username: string,
     email: string,
+    status: string,
     avatar_url?: string,
-    status?: string,
     description?: string,
 }
 
@@ -28,6 +28,10 @@ export type RegisterResponse = {
     email: string,
     created_at: string,
     updated_at: string,
+}
+
+export type LogoutResponse = {
+    // No fields needed for logout
 }
 
 export type ErrorResponse = {
