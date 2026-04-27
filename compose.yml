@@ -9,8 +9,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       PGDATA: /var/lib/postgresql/18/docker
     # Uncomment for development purposes, leave commented in production for better security
-    #ports:
-    #  - "${POSTGRES_PORT}:5432"
+    ports:
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - ./postgres/data:/var/lib/postgresql/18/docker
     healthcheck:

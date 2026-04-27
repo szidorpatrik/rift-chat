@@ -17,6 +17,7 @@ const fields = reactive<AuthFormField[]>([
         type: 'text',
         label: 'Username',
         required: true,
+        autofocus: true,
     },
     {
         name: 'password',
@@ -67,9 +68,9 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
                        icon="i-lucide-user"
                        @submit="onSubmit" />
 
-            <div class="text-sm mt-1 flex flex-row gap-1">
+            <div class="text-sm flex flex-row gap-1 items-center">
                 <span class="text-muted">Don't have an account?</span>
-                <ULink :to="{ name: 'register' }" class="text-secondary">Register</ULink>
+                <ULink :to="{ name: 'register' }" class="text-secondary py-2 pr-3">Register</ULink>
             </div>
         </UPageCard>
     </UContainer>
