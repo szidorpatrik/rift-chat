@@ -4,8 +4,11 @@ import type { LogoutResponse } from '@types';
 import { apiFetch } from '@/utils/api';
 import type { DropdownMenuItem } from '@nuxt/ui';
 import { computed, ref } from 'vue'
+import type { DropdownMenuContentProps } from 'reka-ui';
 
 const toast = useToast()
+const maxUsernameLength = 15
+const maxDescriptionLength = 18
 
 const props = defineProps<{
     username?: string,
@@ -13,6 +16,20 @@ const props = defineProps<{
     avatar_url?: string,
     status?: string
 }>()
+
+const usernameTruncated = computed(() => {
+    if (!props.username) return '';
+    return props.username.length > maxUsernameLength
+        ? props.username.slice(0, maxUsernameLength) + '...'
+        : props.username;
+})
+
+const descriptionTruncated = computed(() => {
+    if (!props.description) return '';
+    return props.description.length > maxDescriptionLength
+        ? props.description.slice(0, maxDescriptionLength) + '...'
+        : props.description;
+})
 
 const chipColor = computed(() => {
     switch (props.status) {
@@ -39,6 +56,12 @@ const statusMessage = computed(() => {
             return 'Offline';
     }
 })
+
+const menuProps: DropdownMenuContentProps = {
+    align: 'start',
+    side: 'top',
+    sideOffset: 16,
+}
 
 const items = ref<DropdownMenuItem[][]>([
     [
@@ -82,20 +105,15 @@ const onLogout = async () => {
 </script>
 
 <template>
-    <div id="btn-profile" class="shrink-0 flex justify-between min-h-16 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm p-2 items-center">
-        <UDropdownMenu :items="items">
-            <UButton variant="ghost" color="neutral" class="w-full rounded-xl">
-                <UUser class="w-full"
-                       :name="username"
-                       :description="description ? description : statusMessage"
-                       :avatar="{
-                        src: avatar_url,
-                        loading: 'lazy',
-                    }"
-                       :chip="{
-                        color: chipColor,
-                        position: 'bottom-right',
-                    }" />
+    <div id="btn-profile" class="shrink-0 flex justify-between min-h-16 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm p-2">
+        <UDropdownMenu :items="items" :content="menuProps">
+            <UButton variant="ghost" color="neutral" class="w-full rounded-xl text-left">
+                <UUser class="w-full overflow-x-hidden min-w-0"
+                       :name="usernameTruncated"
+                       :description="description ? descriptionTruncated : statusMessage"
+                       :avatar="{ src: avatar_url, loading: 'lazy' }"
+                       :chip="{ color: chipColor, position: 'bottom-right' }"
+                       :ui="{ name: 'truncate', description: 'truncate' }" />
             </UButton>
         </UDropdownMenu>
 
