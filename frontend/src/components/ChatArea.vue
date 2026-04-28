@@ -10,9 +10,9 @@ const input = ref('')
 </script>
 
 <template>
-    <div class="flex-1 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm flex flex-col overflow-hidden">
+    <div class="flex flex-1 flex-col gap-4 justify-between overflow-hidden rounded-lg">
 
-        <div class="flex-1 p-4 overflow-y-auto flex flex-col gap-4">
+        <div class="flex flex-col flex-1 p-4 overflow-y-auto gap-4 border rounded-lg border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
             <template v-if="messages.length">
                 <div v-for="msg in messages" :key="msg.id" class="flex flex-col gap-1">
                     <span class="font-bold text-sm">{{ msg.author }}</span>
@@ -25,13 +25,12 @@ const input = ref('')
         </div>
 
         <UTextarea v-model="input" 
-            autoresize 
-            placeholder="Message @placeholder..." 
-            :autofocus="true" 
-            :rows="2" 
-            variant="none" 
-            size="xl" 
-            class="bg-neutral-50 dark:bg-neutral-950" 
-            :ui="{ base: 'min-h-[5rem] max-h-128 focus:ring-0' }"/>
+                autoresize 
+                :autofocus="true" 
+                :rows="2" 
+                :ui="{ base: 'min-h-[4rem] rounded-lg max-h-128 focus:ring-0 border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950' }"
+                placeholder="Message @placeholder..."
+                variant="ghost" 
+                size="xl"/>
     </div>
 </template>

@@ -105,9 +105,9 @@ const onLogout = async () => {
 </script>
 
 <template>
-    <div id="btn-profile" class="shrink-0 flex justify-between min-h-16 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm p-2">
-        <UDropdownMenu :items="items" :content="menuProps">
-            <UButton variant="ghost" color="neutral" class="w-full rounded-xl text-left">
+    <div id="btn-profile" class="shrink-0 flex justify-between min-h-16 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm p-2">
+        <UDropdownMenu :items="items" :content="menuProps" :size="'lg'" >
+            <UButton variant="ghost" color="neutral" class="w-full rounded-lg text-left">
                 <UUser class="w-full overflow-x-hidden min-w-0"
                        :name="usernameTruncated"
                        :description="description ? descriptionTruncated : statusMessage"
@@ -119,13 +119,13 @@ const onLogout = async () => {
 
         <div class="h-full">
             <div class="flex gap-1 h-full p-1">
-                <UButton id="btn-mute" variant="ghost" color="neutral" size="xl" class="rounded-xl">
+                <UButton id="btn-mute" variant="ghost" color="neutral" size="xl" class="rounded-lg">
                     <UIcon name="i-lucide-mic" size="20" />
                 </UButton>
-                <UButton id="btn-headset" variant="ghost" color="neutral" size="xl" class="rounded-xl">
+                <UButton id="btn-headset" variant="ghost" color="neutral" size="xl" class="rounded-lg">
                     <UIcon name="i-lucide-headset" size="20" />
                 </UButton>
-                <UButton id="btn-settings" variant="ghost" color="neutral" size="xl" class="rounded-xl">
+                <UButton id="btn-settings" variant="ghost" color="neutral" size="xl" class="rounded-lg">
                     <UIcon name="mdi-cog-outline" size="20" />
                 </UButton>
             </div>
