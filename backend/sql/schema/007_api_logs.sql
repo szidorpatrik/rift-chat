@@ -10,5 +10,3 @@ CREATE INDEX idx_api_logs_data ON api_logs USING GIN (log_data);
 
 -- +goose Down
 DROP TABLE api_logs;
-
-DROP INDEX idx_api_logs_data;
