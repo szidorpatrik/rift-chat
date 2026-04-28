@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { LoginResponse, Server, Channel, Message } from '@types'
+import { type LoginResponse, type Server, type Channel, type Message } from '@types'
+import type { ServerResponse } from '@types'
 import { onMounted, ref } from 'vue'
 import { apiFetch } from '@api'
 import { useAuthStore } from '@stores/authStore'
@@ -8,16 +9,26 @@ import ServerSidebar from '@components/ServerSidebar.vue'
 import ChannelSidebar from '@components/ChannelSidebar.vue'
 import ChatArea from '@components/ChatArea.vue'
 import UserProfile from '@components/UserProfile.vue'
+import { useServerStore } from '@stores/serverStore'
 
 
 const authStore = useAuthStore()
+const serverStore = useServerStore()
 const toast = useToast()
 
-const serverList = ref<Server[]>([])
 const channelList = ref<Channel[]>([])
 const messageList = ref<Message[]>([])
 
 onMounted(async () => {
+    try {
+        await handleSessionCheck()
+        await loadServers()
+    } catch (error) {
+        console.error(error)
+    }
+})
+
+const handleSessionCheck = async () => {
     const { data, error } = await apiFetch<LoginResponse>('/session')
     if (data) {
         authStore.setUser(data)
@@ -40,7 +51,19 @@ onMounted(async () => {
         color: 'warning'
     })
     router.push({ name: 'login' })
-})
+}
+
+const loadServers = async () => {
+    const { data, error } = await apiFetch<ServerResponse[]>('/servers')
+    if (error) {
+        toast.add({ title: 'Error', description: error.error, color: 'error' })
+        return
+    }
+
+    if (data) {
+        serverStore.setServers(data)
+    }
+}
 </script>
 
 <template>
@@ -49,7 +72,7 @@ onMounted(async () => {
         <div class="flex flex-col gap-4 h-full">
 
             <div class="flex flex-1 gap-4 min-h-0">
-                <ServerSidebar :servers="serverList" />
+                <ServerSidebar />
                 <ChannelSidebar :channels="channelList" />
             </div>
 

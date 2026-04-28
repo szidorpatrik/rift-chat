@@ -34,6 +34,23 @@ export type LogoutResponse = {
     // No fields needed for logout
 }
 
+export type ServerRequest = {
+    name: string,
+    is_public: boolean,
+    description?: string,
+}
+
+export type ServerResponse = {
+    id: string,
+    owner_id: string,
+    name: string,
+    is_public: boolean,
+    icon_url?: string,
+    description?: string,
+    created_at: string,
+    updated_at: string,
+}
+
 export type ErrorResponse = {
     error: string,
     status_code: number,

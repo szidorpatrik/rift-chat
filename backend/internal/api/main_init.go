@@ -8,8 +8,10 @@ import (
 	"log"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -21,8 +23,36 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-const logBatcherSize = 100
-const logBatcherFlushTimer = 5 * time.Second
+const (
+	apiRoot              = "/api"
+	apiVersion           = 1
+	logBatcherSize       = 100
+	logBatcherFlushTimer = 5 * time.Second
+)
+
+func (cfg *ApiConfig) RegisterRoutes(mux *http.ServeMux) {
+	// SYSTEM ENDPOINTS
+	mux.HandleFunc("GET /healthz", cfg.HealthzHandler)
+
+	// PUBLIC API ENDPOINTS
+	mux.HandleFunc(newEndpoint("POST", "/users"), cfg.CreateUserHandler)
+	mux.HandleFunc(newEndpoint("POST", "/login"), cfg.LoginHandler)
+	mux.HandleFunc(newEndpoint("POST", "/refresh"), cfg.RefreshTokenHandler)
+	mux.HandleFunc(newEndpoint("POST", "/revoke"), cfg.RevokeTokenHandler)
+
+	// PROTECTED API ENDPOINTS
+	sessionCheckHandler := http.HandlerFunc(cfg.SessionCheckHandler)
+	mux.Handle(newEndpoint("GET", "/session"), cfg.RequireAuth(sessionCheckHandler))
+
+	getServersHandler := http.HandlerFunc(cfg.GetServersHandler)
+	mux.Handle(newEndpoint("GET", "/servers"), cfg.RequireAuth(getServersHandler))
+
+	getPublicServersHandler := http.HandlerFunc(cfg.GetPublicServersHandler)
+	mux.Handle(newEndpoint("GET", "/servers/public"), getPublicServersHandler)
+
+	createServerHandler := http.HandlerFunc(cfg.CreateServerHandler)
+	mux.Handle(newEndpoint("POST", "/servers"), cfg.RequireAuth(createServerHandler))
+}
 
 func (cfg *ApiConfig) LoadEnvs() error {
 	platform := os.Getenv("BACKEND_PLATFORM")
@@ -134,4 +164,10 @@ func (cfg *ApiConfig) InitializeLogger() {
 			return a
 		},
 	}))
+}
+
+// Returns a string in the format "METHOD /api/VERSION/path"
+func newEndpoint(httpMethod, path string) string {
+	clearedPath := strings.TrimPrefix(path, "/")
+	return fmt.Sprintf("%s %s/v%d/%s", httpMethod, apiRoot, apiVersion, clearedPath)
 }

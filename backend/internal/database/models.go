@@ -49,11 +49,15 @@ type RefreshToken struct {
 }
 
 type Server struct {
-	ID        uuid.UUID
-	Name      string
-	OwnerID   uuid.UUID
-	IconUrl   sql.NullString
-	CreatedAt sql.NullTime
+	ID          uuid.UUID
+	Name        string
+	OwnerID     uuid.UUID
+	IconUrl     sql.NullString
+	CreatedAt   sql.NullTime
+	IsPublic    bool
+	Description sql.NullString
+	UpdatedAt   sql.NullTime
+	DeletedAt   sql.NullTime
 }
 
 type ServerMember struct {

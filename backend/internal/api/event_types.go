@@ -19,11 +19,15 @@ var eventName = map[EventType]string{
 	EventRefreshTokenInvalid:         "refresh_token_invalid",
 	EventRefreshTokenExpired:         "refresh_token_expired",
 	EventRefreshTokenRevokedDetected: "refresh_token_revoked_detected",
-	EventRefreshTokenNotFound:       "refresh_token_not_found",
+	EventRefreshTokenNotFound:        "refresh_token_not_found",
 	EventHTTPRequest:                 "http_request",
 	EventDbError:                     "db_error",
 	EventSessionCheckSuccess:         "session_check_success",
 	EventSessionCheckFailed:          "session_check_failed",
+	EventServerCreateFailed:          "server_create_failed",
+	EventServerCreated:               "server_created",
+	EventServerJoinSuccess:           "server_join_success",
+	EventServerJoinFailed:            "server_join_failed",
 }
 
 const (
@@ -48,6 +52,10 @@ const (
 	EventDbError
 	EventSessionCheckSuccess
 	EventSessionCheckFailed
+	EventServerCreateFailed
+	EventServerCreated
+	EventServerJoinSuccess
+	EventServerJoinFailed
 )
 
 func (e EventType) String() string {

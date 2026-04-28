@@ -7,26 +7,41 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	uuid "github.com/google/uuid"
 )
 
 const createServer = `-- name: CreateServer :one
 INSERT INTO
-    servers (id, name, owner_id)
-VALUES ($1, $2, $3)
+    servers (
+        id,
+        owner_id,
+        name,
+        description,
+        is_public
+    )
+VALUES ($1, $2, $3, $4, $5)
 RETURNING
-    id, name, owner_id, icon_url, created_at
+    id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at
 `
 
 type CreateServerParams struct {
-	ID      uuid.UUID
-	Name    string
-	OwnerID uuid.UUID
+	ID          uuid.UUID
+	OwnerID     uuid.UUID
+	Name        string
+	Description sql.NullString
+	IsPublic    bool
 }
 
 func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) (Server, error) {
-	row := q.db.QueryRowContext(ctx, createServer, arg.ID, arg.Name, arg.OwnerID)
+	row := q.db.QueryRowContext(ctx, createServer,
+		arg.ID,
+		arg.OwnerID,
+		arg.Name,
+		arg.Description,
+		arg.IsPublic,
+	)
 	var i Server
 	err := row.Scan(
 		&i.ID,
@@ -34,8 +49,94 @@ func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) (Ser
 		&i.OwnerID,
 		&i.IconUrl,
 		&i.CreatedAt,
+		&i.IsPublic,
+		&i.Description,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const getPublicServers = `-- name: GetPublicServers :many
+SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at FROM servers WHERE is_public = true
+`
+
+func (q *Queries) GetPublicServers(ctx context.Context) ([]Server, error) {
+	rows, err := q.db.QueryContext(ctx, getPublicServers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Server
+	for rows.Next() {
+		var i Server
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.OwnerID,
+			&i.IconUrl,
+			&i.CreatedAt,
+			&i.IsPublic,
+			&i.Description,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getServersByUserId = `-- name: GetServersByUserId :many
+SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at
+FROM servers
+WHERE
+    id IN (
+        SELECT server_id
+        FROM server_members
+        WHERE
+            user_id = $1
+    )
+`
+
+func (q *Queries) GetServersByUserId(ctx context.Context, userID uuid.UUID) ([]Server, error) {
+	rows, err := q.db.QueryContext(ctx, getServersByUserId, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Server
+	for rows.Next() {
+		var i Server
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.OwnerID,
+			&i.IconUrl,
+			&i.CreatedAt,
+			&i.IsPublic,
+			&i.Description,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const joinServer = `-- name: JoinServer :exec

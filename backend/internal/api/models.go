@@ -54,3 +54,24 @@ type LoginResponse struct {
 	AvatarUrl   string `json:"avatar_url,omitempty"`
 	Description string `json:"description,omitempty"`
 }
+
+type ServerRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	IsPublic    bool `json:"is_public,omitempty"`
+}
+
+type ServerResponse struct {
+	ID          string    `json:"id,omitempty"`
+	OwnerId     string    `json:"owner_id,omitempty"`
+	Name        string    `json:"name"`
+	IconUrl     string    `json:"icon_url,omitempty"`
+	IsPublic    bool      `json:"is_public,omitempty"`
+	Description string    `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"created_at,omitempty"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty"`
+}
+
+type ServersForUserResponse struct {
+	Servers []ServerResponse `json:"servers"`
+}

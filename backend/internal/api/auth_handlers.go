@@ -238,7 +238,7 @@ func (cfg *ApiConfig) RevokeTokenHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (cfg *ApiConfig) SessionCheckHandler(w http.ResponseWriter, r *http.Request) {
-	userID, ok := r.Context().Value("userID").(uuid.UUID)
+	userID, ok := r.Context().Value(userContextKey).(uuid.UUID)
 	if !ok {
 		cfg.handleAuthError(w, r, http.StatusUnauthorized, "invalid session", fmt.Errorf("invalid session"), EventSessionCheckFailed, false, true)
 		return
