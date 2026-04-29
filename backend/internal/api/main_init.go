@@ -52,6 +52,9 @@ func (cfg *ApiConfig) RegisterRoutes(mux *http.ServeMux) {
 
 	createServerHandler := http.HandlerFunc(cfg.CreateServerHandler)
 	mux.Handle(newEndpoint("POST", "/servers"), cfg.RequireAuth(createServerHandler))
+
+	joinServerHandler := http.HandlerFunc(cfg.JoinServerHandler)
+	mux.Handle(newEndpoint("POST", "/servers/join"), cfg.RequireAuth(joinServerHandler))
 }
 
 func (cfg *ApiConfig) LoadEnvs() error {

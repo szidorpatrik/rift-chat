@@ -39,6 +39,8 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     }
 
     serverStore.addServer(data!)
+    if(data?.is_public) serverStore.addPublicServer(data!)
+    
     toast.add({ title: 'Success', description: 'Server created successfully.', color: 'success' })
 }
 </script>

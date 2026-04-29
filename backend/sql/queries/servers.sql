@@ -27,3 +27,6 @@ WHERE
 
 -- name: GetPublicServers :many
 SELECT * FROM servers WHERE is_public = true;
+
+-- name: GetServerById :one
+SELECT * FROM servers WHERE id = $1;

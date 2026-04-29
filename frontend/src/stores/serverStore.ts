@@ -52,6 +52,28 @@ export const useServerStore = defineStore('server', () => {
         return false
     }
 
+    const addPublicServer = (server: ServerResponse) => {
+        publicServers.value.push(server)
+    }
+
+    const joinPublicServer = async (serverId: string) => {
+        const { data, error } = await apiFetch<ServerResponse>('/servers/join', {
+            method: 'POST',
+            body: JSON.stringify({ server_id: serverId }),
+        })
+
+        if (error) {
+            toast.add({ title: 'Failed to join server', description: error.error, color: 'error' })
+            return false
+        }
+
+        if (data) {
+            servers.value.push(data)
+            return true
+        }
+        return false
+    }
+
     return {
         servers,
         publicServers,
@@ -61,5 +83,7 @@ export const useServerStore = defineStore('server', () => {
         setPublicServers,
         loadServers,
         loadPublicServers,
+        addPublicServer,
+        joinPublicServer
     }
 })

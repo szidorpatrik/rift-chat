@@ -3,12 +3,14 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 )
 
@@ -38,14 +40,7 @@ func (cfg *ApiConfig) GetServersHandler(w http.ResponseWriter, r *http.Request) 
 
 	res := make([]ServerResponse, len(servers))
 	for i, server := range servers {
-		res[i] = ServerResponse{
-			ID:          server.ID.String(),
-			Name:        server.Name,
-			Description: server.Description.String,
-			IsPublic:    server.IsPublic,
-			CreatedAt:   server.CreatedAt.Time,
-			UpdatedAt:   server.UpdatedAt.Time,
-		}
+		res[i] = getServerResponse(server)
 	}
 
 	RespondWithJSON(w, http.StatusOK, res)
@@ -61,13 +56,7 @@ func (cfg *ApiConfig) GetPublicServersHandler(w http.ResponseWriter, r *http.Req
 
 	res := make([]ServerResponse, len(servers))
 	for i, server := range servers {
-		res[i] = ServerResponse{
-			ID:          server.ID.String(),
-			Name:        server.Name,
-			Description: server.Description.String,
-			IsPublic:    server.IsPublic,
-			CreatedAt:   server.CreatedAt.Time,
-		}
+		res[i] = getServerResponse(server)
 	}
 
 	RespondWithJSON(w, http.StatusOK, res)
@@ -161,13 +150,72 @@ func (cfg *ApiConfig) CreateServerHandler(w http.ResponseWriter, r *http.Request
 	cfg.LogInfo(r, "server created successfully", createdServer.ID, EventServerCreated)
 	cfg.LogInfo(r, "user joined server successfully", userId, EventServerJoinSuccess, "server_id", createdServer.ID)
 
-	res := ServerResponse{
-		ID:          createdServer.ID.String(),
-		Name:        createdServer.Name,
-		Description: createdServer.Description.String,
-		IsPublic:    createdServer.IsPublic,
-		CreatedAt:   createdServer.CreatedAt.Time,
-		UpdatedAt:   createdServer.UpdatedAt.Time,
-	}
+	res := getServerResponse(createdServer)
 	RespondWithJSON(w, http.StatusCreated, res)
+}
+
+func (cfg *ApiConfig) JoinServerHandler(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value(userContextKey).(uuid.UUID)
+	var req ServerJoinRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		cfg.LogWarn(r, "invalid request body", userId, EventServerJoinFailed)
+		RespondWithError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	serverId := req.ServerId
+	if serverId == uuid.Nil {
+		cfg.LogWarn(r, "invalid server ID", userId, EventServerJoinFailed)
+		RespondWithError(w, http.StatusBadRequest, "invalid server ID")
+		return
+	}
+
+	server, err := cfg.DbQueries.GetServerById(r.Context(), serverId)
+	if err != nil {
+		cfg.LogWarn(r, "server not found", userId, EventServerJoinFailed, "server_id", serverId)
+		RespondWithError(w, http.StatusNotFound, "server not found")
+		return
+	}
+
+	if !server.IsPublic {
+		cfg.LogWarn(r, "attempt to join private server", userId, EventServerJoinFailed, "server_id", serverId)
+		RespondWithError(w, http.StatusForbidden, "you cannot join a private server without an invite code")
+		return
+	}
+
+	params := database.JoinServerParams{
+		ServerID: serverId,
+		UserID:   userId,
+	}
+
+	if err := cfg.DbQueries.JoinServer(r.Context(), params); err != nil {
+		var pgErr *pgconn.PgError
+
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			cfg.LogWarn(r, "user already a member of the server", userId, EventServerJoinFailed, "server_id", serverId)
+			RespondWithError(w, http.StatusConflict, "you are already a member of this server")
+			return
+		}
+		cfg.LogError(r, err, EventServerJoinFailed)
+		RespondWithError(w, http.StatusInternalServerError, "failed to join server")
+		return
+	}
+
+	cfg.LogInfo(r, "server join successful", userId, EventServerJoinSuccess, "server_id", serverId)
+	res := getServerResponse(server)
+	RespondWithJSON(w, http.StatusOK, res)
+}
+
+func getServerResponse(server database.Server) ServerResponse {
+	return ServerResponse{
+		ID:            server.ID.String(),
+		Name:          server.Name,
+		OwnerId:       server.OwnerID.String(),
+		Description:   server.Description.String,
+		BackgroundUrl: server.BackgroundUrl.String,
+		IconUrl:       server.IconUrl.String,
+		IsPublic:      server.IsPublic,
+		CreatedAt:     server.CreatedAt.Time,
+		UpdatedAt:     server.UpdatedAt.Time,
+	}
 }

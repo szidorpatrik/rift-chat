@@ -23,7 +23,7 @@ INSERT INTO
     )
 VALUES ($1, $2, $3, $4, $5)
 RETURNING
-    id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at
+    id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at, background_url
 `
 
 type CreateServerParams struct {
@@ -53,12 +53,13 @@ func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) (Ser
 		&i.Description,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.BackgroundUrl,
 	)
 	return i, err
 }
 
 const getPublicServers = `-- name: GetPublicServers :many
-SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at FROM servers WHERE is_public = true
+SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at, background_url FROM servers WHERE is_public = true
 `
 
 func (q *Queries) GetPublicServers(ctx context.Context) ([]Server, error) {
@@ -80,6 +81,7 @@ func (q *Queries) GetPublicServers(ctx context.Context) ([]Server, error) {
 			&i.Description,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.BackgroundUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -94,8 +96,30 @@ func (q *Queries) GetPublicServers(ctx context.Context) ([]Server, error) {
 	return items, nil
 }
 
+const getServerById = `-- name: GetServerById :one
+SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at, background_url FROM servers WHERE id = $1
+`
+
+func (q *Queries) GetServerById(ctx context.Context, id uuid.UUID) (Server, error) {
+	row := q.db.QueryRowContext(ctx, getServerById, id)
+	var i Server
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.IconUrl,
+		&i.CreatedAt,
+		&i.IsPublic,
+		&i.Description,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.BackgroundUrl,
+	)
+	return i, err
+}
+
 const getServersByUserId = `-- name: GetServersByUserId :many
-SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at
+SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at, background_url
 FROM servers
 WHERE
     id IN (
@@ -125,6 +149,7 @@ func (q *Queries) GetServersByUserId(ctx context.Context, userID uuid.UUID) ([]S
 			&i.Description,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.BackgroundUrl,
 		); err != nil {
 			return nil, err
 		}

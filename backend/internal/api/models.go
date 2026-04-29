@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/logger"
 )
@@ -58,20 +59,25 @@ type LoginResponse struct {
 type ServerRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	IsPublic    bool `json:"is_public,omitempty"`
+	IsPublic    bool   `json:"is_public,omitempty"`
 }
 
 type ServerResponse struct {
-	ID          string    `json:"id,omitempty"`
-	OwnerId     string    `json:"owner_id,omitempty"`
-	Name        string    `json:"name"`
-	IconUrl     string    `json:"icon_url,omitempty"`
-	IsPublic    bool      `json:"is_public,omitempty"`
-	Description string    `json:"description,omitempty"`
-	CreatedAt   time.Time `json:"created_at,omitempty"`
-	UpdatedAt   time.Time `json:"updated_at,omitempty"`
+	ID            string    `json:"id,omitempty"`
+	OwnerId       string    `json:"owner_id,omitempty"`
+	Name          string    `json:"name"`
+	IconUrl       string    `json:"icon_url,omitempty"`
+	BackgroundUrl string    `json:"background_url,omitempty"`
+	IsPublic      bool      `json:"is_public,omitempty"`
+	Description   string    `json:"description,omitempty"`
+	CreatedAt     time.Time `json:"created_at,omitempty"`
+	UpdatedAt     time.Time `json:"updated_at,omitempty"`
 }
 
 type ServersForUserResponse struct {
 	Servers []ServerResponse `json:"servers"`
+}
+
+type ServerJoinRequest struct {
+	ServerId uuid.UUID `json:"server_id"`
 }

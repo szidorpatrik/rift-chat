@@ -42,11 +42,12 @@ export type ServerRequest = {
 
 export type ServerResponse = {
     id: string,
-    owner_id: string,
     name: string,
+    owner_id: string,
+    description?: string,
     is_public: boolean,
     icon_url?: string,
-    description?: string,
+    background_url?: string,
     created_at: string,
     updated_at: string,
 }

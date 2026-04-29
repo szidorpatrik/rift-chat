@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { useServerStore } from '@/stores/serverStore';
 import CreateServerView from '@/views/CreateServerView.vue';
+import JoinServerView from '@/views/JoinServerView.vue';
+import { onMounted } from 'vue';
 
 const serverStore = useServerStore()
+
+onMounted(async () => {
+    
+})
 
 </script>
 
@@ -16,12 +22,19 @@ const serverStore = useServerStore()
         </template>
 
         <UModal title="Create a server">
-            <UButton class="p-2 justify-center" icon="i-lucide-plus" size="xl" color="primary" variant="outline" />
+            <UButton class="p-2 justify-center" icon="i-lucide-plus" size="xl" color="neutral" variant="outline" />
 
             <template #body>
                 <CreateServerView />
             </template>
         </UModal>
 
+        <UModal title="Join a server" :scrollable="true" :ui="{ content: 'max-w-5xl' }">
+            <UButton class="p-2 justify-center" icon="i-lucide-compass" size="xl" color="neutral" variant="outline" />
+
+            <template #body >
+                <JoinServerView />
+            </template>
+        </UModal>
     </div>
 </template>

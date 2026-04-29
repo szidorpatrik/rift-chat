@@ -24,7 +24,7 @@ onMounted(async () => {
         const serversLoaded = await serverStore.loadServers()
         // await loadChannels()
         // await loadMessages()
-
+        const publicServersLoaded = await serverStore.loadPublicServers()
     } catch (error) {
         console.error('Initialization failed:', error)
     }
