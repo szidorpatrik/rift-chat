@@ -4,7 +4,6 @@ import type { LogoutResponse } from '@types';
 import { apiFetch } from '@/utils/api';
 import type { DropdownMenuItem } from '@nuxt/ui';
 import { computed, ref } from 'vue'
-import type { DropdownMenuContentProps } from 'reka-ui';
 
 const toast = useToast()
 const maxUsernameLength = 15
@@ -57,12 +56,6 @@ const statusMessage = computed(() => {
     }
 })
 
-const menuProps: DropdownMenuContentProps = {
-    align: 'start',
-    side: 'top',
-    sideOffset: 16,
-}
-
 const items = ref<DropdownMenuItem[][]>([
     [
         {
@@ -106,7 +99,7 @@ const onLogout = async () => {
 
 <template>
     <div id="btn-profile" class="shrink-0 flex justify-between min-h-16 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm p-2">
-        <UDropdownMenu :items="items" :content="menuProps" :size="'lg'" >
+        <UDropdownMenu :items="items" :content="{ align: 'start', side: 'top', sideOffset: 16 }" size="lg">
             <UButton variant="ghost" color="neutral" class="w-full rounded-lg text-left">
                 <UUser class="w-full overflow-x-hidden min-w-0"
                        :name="usernameTruncated"
@@ -126,7 +119,7 @@ const onLogout = async () => {
                     <UIcon name="i-lucide-headset" size="20" />
                 </UButton>
                 <UButton id="btn-settings" variant="ghost" color="neutral" size="xl" class="rounded-lg">
-                    <UIcon name="mdi-cog-outline" size="20" />
+                    <UIcon name="i-mdi-cog-outline" size="20" />
                 </UButton>
             </div>
         </div>

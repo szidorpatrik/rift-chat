@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type LoginResponse, type Server, type Channel, type Message } from '@types'
+import { type LoginResponse, type Channel, type Message } from '@types'
 import type { ServerResponse } from '@types'
 import { onMounted, ref } from 'vue'
 import { apiFetch } from '@api'
@@ -21,18 +21,24 @@ const messageList = ref<Message[]>([])
 
 onMounted(async () => {
     try {
-        await handleSessionCheck()
-        await loadServers()
+        const isAuthenticated = await handleSessionCheck()
+        if (!isAuthenticated) return
+
+        const serversLoaded = await loadServers()
+        // await loadChannels()
+        // await loadMessages()
+
     } catch (error) {
-        console.error(error)
+        console.error('Initialization failed:', error)
     }
 })
 
-const handleSessionCheck = async () => {
+const handleSessionCheck = async (): Promise<boolean> => {
     const { data, error } = await apiFetch<LoginResponse>('/session')
+
     if (data) {
         authStore.setUser(data)
-        return
+        return true
     }
 
     if (error?.status_code === 500) {
@@ -41,7 +47,7 @@ const handleSessionCheck = async () => {
             description: error.error || 'An unexpected error occurred. Please try again later.',
             color: 'error'
         })
-        return
+        return false
     }
 
     authStore.clearUser()
@@ -51,18 +57,21 @@ const handleSessionCheck = async () => {
         color: 'warning'
     })
     router.push({ name: 'login' })
+    return false
 }
 
 const loadServers = async () => {
     const { data, error } = await apiFetch<ServerResponse[]>('/servers')
     if (error) {
         toast.add({ title: 'Error', description: error.error, color: 'error' })
-        return
+        return false
     }
 
     if (data) {
         serverStore.setServers(data)
+        return true
     }
+    return false
 }
 </script>
 
