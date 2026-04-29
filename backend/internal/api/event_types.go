@@ -28,6 +28,12 @@ var eventName = map[EventType]string{
 	EventServerCreated:               "server_created",
 	EventServerJoinSuccess:           "server_join_success",
 	EventServerJoinFailed:            "server_join_failed",
+	EventServerNotMember:             "server_not_member",
+	EventMissingParameter:            "missing_parameter",
+	EventInvalidParameter:            "invalid_parameter",
+	EventChannelsRetrieved:           "channels_retrieved",
+	EventChannelCreated:              "channel_created",
+	EventChannelCreateFailed:         "channel_create_failed",
 }
 
 const (
@@ -56,6 +62,12 @@ const (
 	EventServerCreated
 	EventServerJoinSuccess
 	EventServerJoinFailed
+	EventServerNotMember
+	EventMissingParameter
+	EventInvalidParameter
+	EventChannelsRetrieved
+	EventChannelCreateFailed
+	EventChannelCreated
 )
 
 func (e EventType) String() string {

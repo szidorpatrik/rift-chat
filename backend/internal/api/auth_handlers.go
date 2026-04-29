@@ -4,23 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"regexp"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/auth"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 )
-
-const (
-	accessTokenExpiry  = time.Hour
-	refreshTokenExpiry = time.Hour * 24 * 30 // 30 days
-	cookieAccessToken  = "access_token"
-	cookieRefreshToken = "refresh_token"
-)
-
-var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{3,30}$`)
-var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	req, code, err := decodeAndValidate(r, validateCreateUserRequest)

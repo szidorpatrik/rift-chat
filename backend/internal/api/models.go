@@ -81,3 +81,22 @@ type ServersForUserResponse struct {
 type ServerJoinRequest struct {
 	ServerId uuid.UUID `json:"server_id"`
 }
+
+type ChannelCreateRequest struct {
+	ServerID uuid.UUID `json:"server_id"`
+	Name     string    `json:"name"`
+	Type     string    `json:"type"`
+	Position int32     `json:"position"`
+}
+
+type ChannelResponse struct {
+	ID       uuid.UUID `json:"id"`
+	ServerID uuid.UUID `json:"server_id"`
+	Name     string    `json:"name"`
+	Type     string    `json:"type"`
+	Position int32     `json:"position"`
+}
+
+type ServerChannelsResponse struct {
+	Channels []ChannelResponse `json:"channels"`
+}

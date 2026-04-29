@@ -6,27 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 )
-
-const (
-	serverNameMinLength = 3
-	serverNameMaxLength = 100
-	serverDescMaxLength = 255
-)
-
-// Allows any printable character, including Unicode/emojis.
-// Length: 3 to 100 characters.
-var serverNameRegex = regexp.MustCompile(fmt.Sprintf(`^[^\x00-\x1F\x7F]{%d,%d}$`, serverNameMinLength, serverNameMaxLength))
-
-// Allows any printable character, including Unicode/emojis.
-// Length: 0 to 255 characters.
-var serverDescRegex = regexp.MustCompile(fmt.Sprintf(`^[^\x00-\x1F\x7F]{0,%d}$`, serverDescMaxLength))
 
 func (cfg *ApiConfig) GetServersHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userContextKey).(uuid.UUID)
