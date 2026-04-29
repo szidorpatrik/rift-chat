@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { type LoginResponse, type Channel, type Message } from '@types'
-import type { ServerResponse } from '@types'
+import { type Channel, type Message } from '@types'
 import { onMounted, ref } from 'vue'
-import { apiFetch } from '@api'
 import { useAuthStore } from '@stores/authStore'
-import router from '@router'
 import ServerSidebar from '@components/ServerSidebar.vue'
 import ChannelSidebar from '@components/ChannelSidebar.vue'
 import ChatArea from '@components/ChatArea.vue'
@@ -21,10 +18,10 @@ const messageList = ref<Message[]>([])
 
 onMounted(async () => {
     try {
-        const isAuthenticated = await handleSessionCheck()
+        const isAuthenticated = await authStore.handleSessionCheck()
         if (!isAuthenticated) return
 
-        const serversLoaded = await loadServers()
+        const serversLoaded = await serverStore.loadServers()
         // await loadChannels()
         // await loadMessages()
 
@@ -33,46 +30,6 @@ onMounted(async () => {
     }
 })
 
-const handleSessionCheck = async (): Promise<boolean> => {
-    const { data, error } = await apiFetch<LoginResponse>('/session')
-
-    if (data) {
-        authStore.setUser(data)
-        return true
-    }
-
-    if (error?.status_code === 500) {
-        toast.add({
-            title: 'Server error',
-            description: error.error || 'An unexpected error occurred. Please try again later.',
-            color: 'error'
-        })
-        return false
-    }
-
-    authStore.clearUser()
-    toast.add({
-        title: 'Session expired',
-        description: 'Please log in again.',
-        color: 'warning'
-    })
-    router.push({ name: 'login' })
-    return false
-}
-
-const loadServers = async () => {
-    const { data, error } = await apiFetch<ServerResponse[]>('/servers')
-    if (error) {
-        toast.add({ title: 'Error', description: error.error, color: 'error' })
-        return false
-    }
-
-    if (data) {
-        serverStore.setServers(data)
-        return true
-    }
-    return false
-}
 </script>
 
 <template>
