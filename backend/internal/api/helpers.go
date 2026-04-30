@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -40,7 +41,7 @@ func RespondNoContent(w http.ResponseWriter) {
 func (cfg *ApiConfig) LogError(r *http.Request, err error, event EventType, extraArgs ...any) {
 	args := append([]any{
 		"event", event.String(),
-		"ip", r.RemoteAddr,
+		"ip", GetClientIP(r),
 		"error", err.Error(),
 	}, extraArgs...)
 	cfg.Logger.Error(err.Error(), args...)
@@ -50,7 +51,7 @@ func (cfg *ApiConfig) LogInfo(r *http.Request, msg string, userId uuid.UUID, eve
 	args := append([]any{
 		"event", event.String(),
 		"user_id", userId.String(),
-		"ip", r.RemoteAddr,
+		"ip", GetClientIP(r),
 	}, extraArgs...)
 	cfg.Logger.Info(msg, args...)
 }
@@ -59,7 +60,22 @@ func (cfg *ApiConfig) LogWarn(r *http.Request, msg string, userId uuid.UUID, eve
 	args := append([]any{
 		"event", event.String(),
 		"user_id", userId.String(),
-		"ip", r.RemoteAddr,
+		"ip", GetClientIP(r),
 	}, extraArgs...)
 	cfg.Logger.Warn(msg, args...)
+}
+
+func GetClientIP(r *http.Request) string {
+	xff := r.Header.Get("X-Forwarded-For")
+	if xff != "" {
+		ips := strings.Split(xff, ",")
+		return strings.TrimSpace(ips[0])
+	}
+
+	xri := r.Header.Get("X-Real-IP")
+	if xri != "" {
+		return strings.TrimSpace(xri)
+	}
+
+	return r.RemoteAddr
 }

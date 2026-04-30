@@ -127,8 +127,8 @@ func (cfg *ApiConfig) LoggingMiddleware(next http.Handler) http.Handler {
 		}
 
 		cfg.Logger.Info("http request",
-			"event", EventHTTPRequest.String(),
-			"ip", r.RemoteAddr,
+			"event", EventHTTPRequest,
+			"ip", GetClientIP(r),
 			"user_id", userId,
 			"method", r.Method,
 			"path", r.URL.Path,

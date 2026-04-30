@@ -126,7 +126,7 @@ func (cfg *ApiConfig) clearAuthCookie(w http.ResponseWriter, name string) {
 func (cfg *ApiConfig) handleAuthError(w http.ResponseWriter, r *http.Request, code int, msg string, err error, event EventType, isError bool, shouldRespondErrMsg bool, extraArgs ...any) {
 	args := append([]any{
 		"event", event.String(),
-		"ip", r.RemoteAddr,
+		"ip", GetClientIP(r),
 		"error", err.Error(),
 	}, extraArgs...)
 
