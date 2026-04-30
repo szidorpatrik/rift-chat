@@ -11,19 +11,18 @@ const input = ref('')
 
 <template>
     <div class="flex flex-1 flex-col gap-4 justify-between overflow-hidden rounded-lg">
-
-        <div class="flex flex-col flex-1 p-4 overflow-y-auto gap-4 border rounded-lg border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
-            <template v-if="messages.length">
-                <div v-for="msg in messages" :key="msg.id" class="flex flex-col gap-1">
-                    <span class="font-bold text-sm">{{ msg.author }}</span>
-                    <p class="text-neutral-600 dark:text-neutral-300">{{ msg.content }}</p>
-                </div>
-            </template>
-            <template v-else>
-                <USkeleton v-for="_ in 60" class="h-8 w-full shrink-0" />
-            </template>
-        </div>
-
+        <UScrollArea class="hover-scrollbar h-full w-full border rounded-lg border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm" :ui="{ viewport: 'gap-4 p-4' }">
+                <template v-if="messages.length">
+                    <div v-for="msg in messages" :key="msg.id" class="flex flex-col gap-1">
+                        <span class="font-bold text-sm">{{ msg.author }}</span>
+                        <p class="text-neutral-600 dark:text-neutral-300">{{ msg.content }}</p>
+                    </div>
+                </template>
+                <template v-else>
+                    <USkeleton v-for="_ in 60" class="h-8 w-full shrink-0" />
+                </template>
+        </UScrollArea>
+            
         <UTextarea v-model="input" 
                 autoresize 
                 :autofocus="true" 

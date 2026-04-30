@@ -1,3 +1,26 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+@layer utilities {
+    .hover-scrollbar {
+        /* Base scrollbar width */
+        &::-webkit-scrollbar {
+            @apply w-0.5;
+        }
+
+        /* Transparent track */
+        &::-webkit-scrollbar-track {
+            @apply bg-transparent;
+        }
+
+        /* Invisible, rounded thumb by default */
+        &::-webkit-scrollbar-thumb {
+            @apply bg-transparent rounded-full;
+        }
+
+        /* Show thumb colors when the container is hovered */
+        &:hover::-webkit-scrollbar-thumb {
+            @apply bg-gray-700 dark:bg-neutral-500;
+        }
+    }
+}
