@@ -1,15 +1,18 @@
 -- +goose Up
-CREATE TABLE messages (
-    id UUID PRIMARY KEY DEFAULT uuidv7(),
-    channel_id UUID NOT NULL REFERENCES channels (id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
+CREATE TABLE messages(
+    id uuid NOT NULL DEFAULT uuidv7(),
+    channel_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    content text NOT NULL,
     -- JSONB for flexible metadata (attachments, reactions, embeds, edited history)
     -- Example: {"reactions": {"thumbsup": 5}, "attachments": ["url1.jpg"]}
-    metadata JSONB DEFAULT '{}'::jsonb,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE,
-    deleted_at TIMESTAMP WITH TIME ZONE
+    metadata jsonb DEFAULT '{}'::jsonb,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    PRIMARY KEY(id),
+    CONSTRAINT messages_channel_id_fkey FOREIGN key(channel_id) REFERENCES channels(id),
+    CONSTRAINT messages_user_id_fkey FOREIGN key(user_id) REFERENCES users(id)
 );
 
 -- +goose Down

@@ -1,11 +1,14 @@
 -- +goose Up
-CREATE TABLE channels (
-    id UUID PRIMARY KEY DEFAULT uuidv7(),
-    server_id UUID NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    type VARCHAR(20) NOT NULL DEFAULT 'text', -- 'text' or 'voice' or 'category'
-    position INTEGER NOT NULL DEFAULT 0, -- For ordering channels in the UI
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TABLE channels(
+    id uuid NOT NULL DEFAULT uuidv7(),
+    server_id uuid NOT NULL,
+    name varchar(100) NOT NULL,
+    "type" integer NOT NULL DEFAULT 0,
+    position integer NOT NULL DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    PRIMARY KEY(id),
+    CONSTRAINT channels_server_id_fkey FOREIGN key(server_id) REFERENCES servers(id)
 );
 
 -- +goose Down
