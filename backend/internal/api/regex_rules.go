@@ -17,7 +17,7 @@ const (
 )
 
 // Collapse multiple whitespace characters into a single space.
-var replaceWhiteSpaceRegex = regexp.MustCompile(`\s+`)
+var whitespace = regexp.MustCompile(`\s+`)
 
 // Allows letters, numbers, and underscores. Length: 3 to 30 characters.
 var usernameRegex = regexp.MustCompile(fmt.Sprintf(`^[a-zA-Z0-9_]{%d,%d}$`, usernameMinLength, usernameMaxLength))

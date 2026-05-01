@@ -59,8 +59,7 @@ func (cfg *ApiConfig) CreateChannelHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Validate channel name
-	req.Name = strings.TrimSpace(req.Name)
-	req.Name = replaceWhiteSpaceRegex.ReplaceAllString(req.Name, " ")
+	req.Name = sanitizeInput(req.Name, " ")
 	if !channelNameRegex.MatchString(req.Name) {
 		cfg.LogWarn(r, "invalid channel name", serverId, EventChannelCreateFailed)
 		RespondWithError(w, http.StatusBadRequest, "invalid channel name")
@@ -68,7 +67,8 @@ func (cfg *ApiConfig) CreateChannelHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	if req.Type == 0 {
-		req.Name = replaceWhiteSpaceRegex.ReplaceAllString(req.Name, "-")
+		req.Name = whitespace.ReplaceAllString(req.Name, "-")
+		req.Name = strings.ToLower(req.Name)
 	}
 
 	channelId, err := uuid.NewV7()
@@ -83,6 +83,7 @@ func (cfg *ApiConfig) CreateChannelHandler(w http.ResponseWriter, r *http.Reques
 		ServerID: serverId,
 		Name:     req.Name,
 		Type:     req.Type,
+		Position: req.Position,
 	}
 	channel, err := cfg.DbQueries.CreateChannel(r.Context(), params)
 	if err != nil {
@@ -97,6 +98,7 @@ func (cfg *ApiConfig) CreateChannelHandler(w http.ResponseWriter, r *http.Reques
 		ServerID: channel.ServerID,
 		Name:     channel.Name,
 		Type:     channel.Type,
+		Position: channel.Position,
 	}
 	RespondWithJSON(w, http.StatusCreated, res)
 }

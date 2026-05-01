@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -56,8 +55,8 @@ func (cfg *ApiConfig) CreateServerHandler(w http.ResponseWriter, r *http.Request
 		RespondWithError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	req.Name = strings.TrimSpace(req.Name)
-	req.Description = strings.TrimSpace(req.Description)
+	req.Name = sanitizeInput(req.Name, " ")
+	req.Description = sanitizeInput(req.Description, " ")
 
 	if !serverNameRegex.MatchString(req.Name) {
 		cfg.LogWarn(r, "invalid server name", userId, EventServerCreateFailed)

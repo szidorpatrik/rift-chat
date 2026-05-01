@@ -43,6 +43,9 @@ func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	req.Username = sanitizeInput(req.Username, " ")
+	req.Email = sanitizeInput(req.Email, " ")
+
 	params := database.CreateUserParams{
 		ID:           userId,
 		Username:     req.Username,
@@ -245,9 +248,9 @@ func (cfg *ApiConfig) SessionCheckHandler(w http.ResponseWriter, r *http.Request
 
 	cfg.LogInfo(r, "session check successful", user.ID, EventSessionCheckSuccess)
 	res := LoginResponse{
-		ID:       user.ID.String(),
-		Username: user.Username,
-		Email:    user.Email,
+		ID:          user.ID.String(),
+		Username:    user.Username,
+		Email:       user.Email,
 		AvatarUrl:   user.AvatarUrl.String,
 		Status:      user.Status.String,
 		Description: user.Description.String,

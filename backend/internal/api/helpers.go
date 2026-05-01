@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"unicode"
 
 	"github.com/google/uuid"
 )
@@ -35,7 +36,7 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
 }
 
 func RespondNoContent(w http.ResponseWriter) {
-    w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (cfg *ApiConfig) LogError(r *http.Request, err error, event EventType, extraArgs ...any) {
@@ -78,4 +79,24 @@ func GetClientIP(r *http.Request) string {
 	}
 
 	return r.RemoteAddr
+}
+
+func sanitizeInput(input, replaceChar string) string {
+	// Normalize weird spaces to regular space first
+	input = strings.Map(func(r rune) rune {
+		// Remove invisible formatting chars
+		if unicode.Is(unicode.Cf, r) {
+			return ' ' // replace with space
+		}
+		// Normalize all space separators to plain space
+		if unicode.Is(unicode.Zs, r) {
+			return ' '
+		}
+		return r
+	}, input)
+
+	input = strings.TrimSpace(input)
+	input = whitespace.ReplaceAllString(input, replaceChar)
+
+	return input
 }
