@@ -1,5 +1,5 @@
 export interface Server { id: string; name: string; avatar?: string }
-export interface Channel { id: string; name: string; type: 0 | 1 | 2 }
+export interface Channel { id: string; name: string; type: 0 | 1 | 2, position: number }
 export interface Message { id: string; author: string; content: string }
 
 export type LoginRequest = {

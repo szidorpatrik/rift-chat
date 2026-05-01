@@ -3,11 +3,16 @@ import { useServerStore } from '@stores/serverStore';
 import type { Channel } from '@types'
 import type { ContextMenuItem } from '@nuxt/ui'
 import CreateChannelView from '@views/CreateChannelView.vue'
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
-defineProps<{
+const props = defineProps<{
     channels: Channel[] | []
 }>()
+
+
+const sortedChannels = computed(() => {
+  return [...props.channels].sort((a, b) => a.position - b.position)
+})
 
 const serverStore = useServerStore()
 const openCreateChannel = ref(false)
@@ -100,8 +105,8 @@ const getIcon = (type: 0 | 1 | 2) => {
         <UContextMenu :items="channelCreateActions">
             <UScrollArea :ui="{ viewport: 'gap-2' }" class="h-full w-full px-4 pb-4 mt-0.5 hover-scrollbar">
 
-                <template v-if="channels.length">
-                    <UContextMenu v-for="channel in channels"
+                <template v-if="sortedChannels.length">
+                    <UContextMenu v-for="channel in sortedChannels"
                                   :key="channel.id"
                                   :items="getChannelEditActions(channel)">
                         <div class="h-10 w-full shrink-0 flex items-center px-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer">

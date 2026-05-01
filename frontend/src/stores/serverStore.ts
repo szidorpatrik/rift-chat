@@ -131,7 +131,10 @@ export const useServerStore = defineStore('server', () => {
             }),
         })
 
-        if (error) return false
+        if (error) {
+            toast.add({ title: 'Error', description: error.error, color: 'error' })
+            return false
+        }
 
         if (data) {
             const server = servers.value.find(s => s.id === data.server_id)
