@@ -6,13 +6,19 @@ import (
 )
 
 const (
-	usernameMinLength   = 3
-	usernameMaxLength   = 30
-	emailMinLength      = 2
-	serverNameMinLength = 3
-	serverNameMaxLength = 100
-	serverDescMaxLength = 255
+	usernameMinLength    = 3
+	usernameMaxLength    = 30
+	emailMinLength       = 2
+	serverNameMinLength  = 3
+	serverNameMaxLength  = 100
+	serverDescMaxLength  = 255
+	channelNameMinLength = 1
+	channelNameMaxLength = 100
 )
+
+// Collapse multiple whitespace characters into a single space.
+var replaceWhiteSpaceRegex = regexp.MustCompile(`\s+`)
+
 // Allows letters, numbers, and underscores. Length: 3 to 30 characters.
 var usernameRegex = regexp.MustCompile(fmt.Sprintf(`^[a-zA-Z0-9_]{%d,%d}$`, usernameMinLength, usernameMaxLength))
 
@@ -26,3 +32,7 @@ var serverNameRegex = regexp.MustCompile(fmt.Sprintf(`^[^\x00-\x1F\x7F]{%d,%d}$`
 // Allows any printable character, including Unicode/emojis.
 // Length: 0 to 255 characters.
 var serverDescRegex = regexp.MustCompile(fmt.Sprintf(`^[^\x00-\x1F\x7F]{0,%d}$`, serverDescMaxLength))
+
+// Allows any printable character, including Unicode/emojis.
+// Length: 1 to 100 characters.
+var channelNameRegex = regexp.MustCompile(fmt.Sprintf(`^[^\x00-\x1F\x7F]{%d,%d}$`, channelNameMinLength, channelNameMaxLength))

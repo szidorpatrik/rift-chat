@@ -11,25 +11,21 @@ import { useServerStore } from '@stores/serverStore'
 
 const authStore = useAuthStore()
 const serverStore = useServerStore()
-const toast = useToast()
 
-const channelList = ref<Channel[]>([])
 const messageList = ref<Message[]>([])
 
 onMounted(async () => {
-    try {
+   try {
         const isAuthenticated = await authStore.handleSessionCheck()
         if (!isAuthenticated) return
 
-        const serversLoaded = await serverStore.loadServers()
-        // await loadChannels()
+        await serverStore.loadServers()
+        await serverStore.loadPublicServers()
         // await loadMessages()
-        const publicServersLoaded = await serverStore.loadPublicServers()
     } catch (error) {
         console.error('Initialization failed:', error)
     }
 })
-
 </script>
 
 <template>
@@ -39,7 +35,7 @@ onMounted(async () => {
 
             <div class="flex flex-1 gap-4 min-h-0">
                 <ServerSidebar />
-                <ChannelSidebar :channels="channelList" />
+                <ChannelSidebar :channels="serverStore.currentServer?.channels || []" />
             </div>
 
             <UserProfile :username="authStore.currentUser?.username"

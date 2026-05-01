@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ServerResponse, ChannelResponse } from '@types'
+import type { ServerResponse, ChannelResponse, ChannelRequest, ServerRequest, ErrorResponse } from '@types'
 import { apiFetch } from '@utils/api'
 
 export interface Server extends ServerResponse {
@@ -15,7 +15,7 @@ export const useServerStore = defineStore('server', () => {
     const servers = ref<Server[]>([])
     const publicServers = ref<ServerResponse[]>([])
 
-    const currentServerId = ref<string | null>(sessionStorage.getItem(sessionStorageKey))
+    const currentServerId = ref<string | null>(null)
     const currentChannelId = ref<string | null>(null)
 
     // --- Getters ---
@@ -23,15 +23,19 @@ export const useServerStore = defineStore('server', () => {
     const currentChannel = computed(() => currentServer.value?.channels.find(c => c.id === currentChannelId.value) || null)
 
     // --- Actions ---
-    const setServers = (serverArray: ServerResponse[]) => {
+    const setServers = async (serverArray: ServerResponse[]) => {
         servers.value = serverArray.map(server => ({
             ...server,
             channels: []
         }))
 
-        if (!currentServerId.value && servers.value.length > 0) {
-            setCurrentServer(servers.value[0].id)
+        if (servers.value.length === 0) {
+            setCurrentServer(null)
+            return
         }
+        const lastServerId = sessionStorage.getItem(sessionStorageKey) || servers.value[0].id
+        setCurrentServer(lastServerId)
+        await loadChannels(lastServerId)
     }
 
     const addServer = (server: ServerResponse) => {
@@ -46,14 +50,26 @@ export const useServerStore = defineStore('server', () => {
         }
     }
 
-    const setCurrentServer = (serverId: string | null) => {
+    const setCurrentServer = async (serverId: string | null) => {
         currentServerId.value = serverId
-        if (serverId) {
-            sessionStorage.setItem(sessionStorageKey, serverId)
-        } else {
+        currentChannelId.value = null
+
+        if (!serverId) {
             sessionStorage.removeItem(sessionStorageKey)
-            currentChannelId.value = null
+            return
         }
+
+        sessionStorage.setItem(sessionStorageKey, serverId)
+
+        const server = servers.value.find(s => s.id === serverId)
+
+        if (!server) return
+
+        if (server.channels.length === 0) {
+            await loadChannels(serverId)
+        }
+
+        currentChannelId.value = server.channels?.[0]?.id ?? null
     }
 
     const setCurrentChannel = (channelId: string | null) => {
@@ -74,21 +90,60 @@ export const useServerStore = defineStore('server', () => {
         return false
     }
 
+    const loadingChannels = ref<Set<string>>(new Set())
     const loadChannels = async (serverId: string) => {
-        const { data, error } = await apiFetch<ChannelResponse[]>(`/servers/${serverId}/channels`)
-        if (error) {
-            toast.add({ title: 'Error', description: error.error, color: 'error' })
+        if (loadingChannels.value.has(serverId)) return false
+
+        loadingChannels.value.add(serverId)
+
+        try {
+            const { data, error } = await apiFetch<ChannelResponse[]>(`/servers/${serverId}/channels`)
+            if (error) {
+                toast.add({ title: 'Error', description: error.error, color: 'error' })
+                return false
+            }
+
+            if (data) {
+                const server = servers.value.find(s => s.id === serverId)
+                if (server) server.channels = data
+                return true
+            }
+        } finally {
+            loadingChannels.value.delete(serverId)
+        }
+
+        return false
+    }
+
+    const createChannel = async (payload: ChannelRequest) => {
+        if (!currentServer.value) {
+            toast.add({ title: 'Error', description: 'No server selected', color: 'error' })
             return false
         }
 
+        const position = currentServer.value?.channels.length || 0
+        const { data, error } = await apiFetch<ChannelResponse>(`/servers/${currentServer.value?.id}/channels`, {
+            method: 'POST',
+            body: JSON.stringify({
+                name: payload.name,
+                type: payload.type,
+                position: position,
+            }),
+        })
+
+        if (error) return false
+
         if (data) {
-            const serverIndex = servers.value.findIndex(s => s.id === serverId)
-            if (serverIndex !== -1) {
-                servers.value[serverIndex].channels = data
+            const server = servers.value.find(s => s.id === data.server_id)
+            if (server) {
+                server.channels.push(data)
+            } else {
+                toast.add({ title: 'Error', description: 'Server not found', color: 'error' })
+                return false
             }
-            return true
         }
-        return false
+        toast.add({ title: 'Channel created', description: `Channel "${payload.name}" has been created.`, color: 'success' })
+        return true
     }
 
     const loadPublicServers = async () => {
@@ -127,7 +182,7 @@ export const useServerStore = defineStore('server', () => {
         return false
     }
 
-    const createServer = async (payload: { name: string; is_public?: boolean; description?: string }) => {
+    const createServer = async (payload: ServerRequest) => {
         const { data, error } = await apiFetch<ServerResponse>('/servers', {
             method: 'POST',
             body: JSON.stringify({
@@ -146,7 +201,7 @@ export const useServerStore = defineStore('server', () => {
             }
             return { data }
         }
-        return  { error } 
+        return { error }
     }
 
     const joinServerByInvite = async (inviteCode: string) => {
@@ -181,6 +236,7 @@ export const useServerStore = defineStore('server', () => {
         setCurrentChannel,
         loadServers,
         loadChannels,
+        createChannel,
         loadPublicServers,
         addPublicServer,
         joinPublicServer,

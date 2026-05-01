@@ -191,6 +191,8 @@ func (cfg *ApiConfig) JoinServerHandler(w http.ResponseWriter, r *http.Request) 
 	RespondWithJSON(w, http.StatusOK, res)
 }
 
+//TODO: invite codes, leaving servers, deleting servers, kicking members, etc.
+
 func getServerResponse(server database.Server) ServerResponse {
 	return ServerResponse{
 		ID:            server.ID.String(),

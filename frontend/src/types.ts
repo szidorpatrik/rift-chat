@@ -1,5 +1,5 @@
 export interface Server { id: string; name: string; avatar?: string }
-export interface Channel { id: string; name: string }
+export interface Channel { id: string; name: string; type: 0 | 1 | 2 }
 export interface Message { id: string; author: string; content: string }
 
 export type LoginRequest = {
@@ -58,9 +58,8 @@ export type ErrorResponse = {
 }
 
 export type ChannelRequest = {
-    server_id: string,
     name: string,
-    type: 'text' | 'voice' | 'category',
+    type: 0 | 1 | 2, // 0 = text, 1 = voice, 2 = category
     position: number,
 }
 
@@ -68,6 +67,6 @@ export type ChannelResponse = {
     id: string,
     server_id: string,
     name: string,
-    type: 'text' | 'voice' | 'category',
+    type: 0 | 1 | 2, // 0 = text, 1 = voice, 2 = category
     position: number,
 }

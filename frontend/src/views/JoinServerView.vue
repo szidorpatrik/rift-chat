@@ -2,8 +2,6 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { reactive } from 'vue'
-import { apiFetch } from '@utils/api'
-import type { ServerResponse } from '@types'
 import { useServerStore } from '@stores/serverStore'
 
 const schema = z.object({
@@ -20,19 +18,9 @@ const toast = useToast()
 const serverStore = useServerStore()
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
+    //TODO: Implement joining server by invite code
     toast.add({ title: 'TODO: Joining server...', description: 'This feature is not implemented yet.', color: 'warning' })
     return
-
-    if (!payload.data.invite_code) return
-
-    const { error } = await serverStore.joinServerByInvite(payload.data.invite_code)
-
-    if (error) {
-        toast.add({ title: 'Error', description: error.error, color: 'error' })
-        return
-    }
-
-    toast.add({ title: 'Success', description: 'Joined server successfully.', color: 'success' })
 }
 </script>
 

@@ -29,7 +29,7 @@ type CreateChannelParams struct {
 	ID       uuid.UUID
 	ServerID uuid.UUID
 	Name     string
-	Type     string
+	Type     int32
 	Position int32
 }
 

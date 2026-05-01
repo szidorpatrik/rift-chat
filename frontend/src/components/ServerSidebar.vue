@@ -1,32 +1,48 @@
 <script setup lang="ts">
+import type { RadioGroupItem } from '@nuxt/ui';
 import { useServerStore } from '@stores/serverStore';
 import CreateServerView from '@views/CreateServerView.vue';
 import JoinServerView from '@views/JoinServerView.vue';
+import { computed, ref, watch } from 'vue';
+
+const openCreateServer = ref(false)
 const serverStore = useServerStore()
 
+const servers = computed<RadioGroupItem[]>(() =>
+    serverStore.servers.map(s => ({
+        label: s.name[0].toUpperCase(),
+        value: s.id,
+        class: 'size-14 mb-2 cursor-pointer flex items-center justify-center font-semibold text-white',
+    }))
+)
+
+watch(() => serverStore.currentServerId, (newId) => {
+    if (newId) {
+        sessionStorage.setItem('lastServerId', newId.toString())
+    }
+})
 </script>
 
 <template>
-    <div class="overflow-y-auto w-12 shrink-0 flex flex-col items-center rounded-lg gap-4 p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-
+    <div class="overflow-y-auto w-14 shrink-0 flex flex-col items-center rounded-lg p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <template v-if="serverStore.servers.length > 0">
-            <div v-for="server in serverStore.servers" :key="server.id"
-                 @click="serverStore.setCurrentServer(server.id)"
-                 class="select-none w-full size-12 shrink-0 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center cursor-pointer hover:rounded-lg transition-all">
-                {{ server.name.charAt(0) }}
-            </div>
+            <URadioGroup v-model="serverStore.currentServerId"
+                         :items="servers"
+                         size="md"
+                         indicator="hidden"
+                         variant="card" />
         </template>
 
-        <UModal title="Create a server">
-            <UButton class="p-2 justify-center" icon="i-lucide-plus" size="xl" color="neutral" variant="outline" />
+        <UModal title="Create a server" v-model:open="openCreateServer">
+            <UButton class="p-2 mt-2 mb-4 justify-center" icon="i-lucide-plus" size="xl" color="neutral" variant="outline" />
 
             <template #body>
-                <CreateServerView />
+                <CreateServerView v-model:open="openCreateServer" />
             </template>
         </UModal>
 
         <UModal title="Join a server" :scrollable="true" :ui="{ content: 'max-w-5xl' }">
-            <UButton class="p-2 justify-center" icon="i-lucide-compass" size="xl" color="neutral" variant="outline" />
+            <UButton class="p-2 mb-4 justify-center" icon="i-lucide-compass" size="xl" color="neutral" variant="outline" />
 
             <template #body>
                 <JoinServerView />
