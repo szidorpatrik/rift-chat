@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import router from '@/router';
-import type { LogoutResponse } from '@types';
-import { apiFetch } from '@/utils/api';
+import router from '@router';
+import { useAuthStore } from '@stores/authStore';
 import type { DropdownMenuItem } from '@nuxt/ui';
 import { computed, ref } from 'vue'
 
 const toast = useToast()
+const authStore = useAuthStore()
+
 const maxUsernameLength = 15
 const maxDescriptionLength = 18
 
@@ -76,9 +77,8 @@ const items = ref<DropdownMenuItem[][]>([
 ])
 
 const onLogout = async () => {
-    const { error } = await apiFetch<LogoutResponse>('/revoke', {
-        method: 'POST',
-    })
+    const { error } = await authStore.logout()
+
     if (error) {
         toast.add({
             title: 'Logout failed',
@@ -87,6 +87,7 @@ const onLogout = async () => {
         })
         return
     }
+
     toast.add({
         title: 'Logged out',
         description: 'You have been logged out successfully.',

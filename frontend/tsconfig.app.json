@@ -9,7 +9,6 @@
       "#build/ui/*": [
         "./node_modules/.nuxt-ui/ui/*"
       ],
-      "@/*": ["./src/*"],
       "@types": ["./src/types.ts"],
       "@api": ["./src/utils/api.ts"],
       "@router": ["./src/router/index.ts"],
@@ -20,6 +19,7 @@
       "@assets/*": ["./src/assets/*"],
       "@stores/*": ["./src/stores/*"],
       "@views/*": ["./src/views/*"],
+      "@/*": ["./src/*"],
     },
 
     /* Linting */

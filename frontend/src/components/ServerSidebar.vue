@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useServerStore } from '@/stores/serverStore';
-import CreateServerView from '@/views/CreateServerView.vue';
-import JoinServerView from '@/views/JoinServerView.vue';
+import { useServerStore } from '@stores/serverStore';
+import CreateServerView from '@views/CreateServerView.vue';
+import JoinServerView from '@views/JoinServerView.vue';
 const serverStore = useServerStore()
 
 </script>

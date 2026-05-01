@@ -24,13 +24,10 @@ const toast = useToast()
 const serverStore = useServerStore()
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
-    const { data, error } = await apiFetch<ServerResponse>('/servers', {
-        method: 'POST',
-        body: JSON.stringify({
-            name: payload.data.name,
-            is_public: payload.data.isPublic,
-            description: payload.data.description,
-        }),
+    const { error } = await serverStore.createServer({
+        name: payload.data.name,
+        is_public: payload.data.isPublic,
+        description: payload.data.description,
     })
 
     if (error) {
@@ -38,9 +35,6 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
         return
     }
 
-    serverStore.addServer(data!)
-    if(data?.is_public) serverStore.addPublicServer(data!)
-    
     toast.add({ title: 'Success', description: 'Server created successfully.', color: 'success' })
 }
 </script>

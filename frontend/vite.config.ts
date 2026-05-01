@@ -18,7 +18,6 @@ export default defineConfig(({ mode }) => {
     resolve: {
       tsconfigPaths: true,
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
         '@types': fileURLToPath(new URL('./src/types.ts', import.meta.url)),
         '@api': fileURLToPath(new URL('./src/utils/api.ts', import.meta.url)),
         '@utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
@@ -29,6 +28,7 @@ export default defineConfig(({ mode }) => {
         '@views': fileURLToPath(new URL('./src/views', import.meta.url)),
         '@assets': fileURLToPath(new URL('./src/assets', import.meta.url)),
         '@stores': fileURLToPath(new URL('./src/stores', import.meta.url)),
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
       }
     },
     server: {

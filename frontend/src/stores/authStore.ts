@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { LoginResponse } from '@types'
-import { apiFetch } from '@/utils/api'
+import type { LoginResponse, LoginRequest, RegisterRequest, RegisterResponse, LogoutResponse } from '@types'
+import { apiFetch } from '@utils/api'
 import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -47,6 +47,41 @@ export const useAuthStore = defineStore('auth', () => {
         return false
     }
 
+    const login = async (req: LoginRequest) => {
+        const { data, error } = await apiFetch<LoginResponse>('/login', {
+            method: 'POST',
+            body: JSON.stringify(req)
+        })
+
+        if (data) {
+            setUser(data)
+        }
+        
+        return { data, error }
+    }
+
+    const register = async (req: RegisterRequest) => {
+        const { data, error } = await apiFetch<RegisterResponse>('/users', {
+            method: 'POST',
+            body: JSON.stringify(req)
+        })
+
+        return { data, error }
+    }
+
+    const logout = async () => {
+        const { error } = await apiFetch<LogoutResponse>('/revoke', {
+            method: 'POST',
+        })
+
+        // If the server successfully revokes the token, clear the local state
+        if (!error) {
+            clearUser()
+        }
+
+        return { error }
+    }
+
     return {
         user,
         isAuthenticated,
@@ -54,5 +89,8 @@ export const useAuthStore = defineStore('auth', () => {
         setUser,
         clearUser,
         handleSessionCheck,
+        login,
+        register,
+        logout
     }
 })

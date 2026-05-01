@@ -23,20 +23,16 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     toast.add({ title: 'TODO: Joining server...', description: 'This feature is not implemented yet.', color: 'warning' })
     return
 
-    const { data, error } = await apiFetch<ServerResponse>('/servers', {
-        method: 'POST',
-        body: JSON.stringify({
-            invite_code: payload.data.invite_code,
-        }),
-    })
+    if (!payload.data.invite_code) return
+
+    const { error } = await serverStore.joinServerByInvite(payload.data.invite_code)
 
     if (error) {
-        toast.add({ title: 'Error', description: error!.error, color: 'error' })
+        toast.add({ title: 'Error', description: error.error, color: 'error' })
         return
     }
 
-    serverStore.addServer(data!)
-    toast.add({ title: 'Success', description: 'Server created successfully.', color: 'success' })
+    toast.add({ title: 'Success', description: 'Joined server successfully.', color: 'success' })
 }
 </script>
 

@@ -56,3 +56,18 @@ export type ErrorResponse = {
     error: string,
     status_code: number,
 }
+
+export type ChannelRequest = {
+    server_id: string,
+    name: string,
+    type: 'text' | 'voice' | 'category',
+    position: number,
+}
+
+export type ChannelResponse = {
+    id: string,
+    server_id: string,
+    name: string,
+    type: 'text' | 'voice' | 'category',
+    position: number,
+}

@@ -2,12 +2,12 @@
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
-import type { RegisterRequest, RegisterResponse } from '@types'
 import * as z from 'zod'
-import { apiFetch } from '@/utils/api'
+import { useAuthStore } from '@stores/authStore'
 
 const router = useRouter()
 const toast = useToast()
+const authStore = useAuthStore()
 
 const fields = reactive<AuthFormField[]>([
     {
@@ -51,15 +51,10 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
-    const req: RegisterRequest = {
+    const { data, error } = await authStore.register({
         username: payload.data.username,
         email: payload.data.email,
         password: payload.data.password,
-    }
-
-    const { data, error } = await apiFetch<RegisterResponse>('/users', {
-        method: 'POST',
-        body: JSON.stringify(req)
     })
 
     if (error) {

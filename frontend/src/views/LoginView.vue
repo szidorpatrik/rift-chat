@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { apiFetch } from '@api'
-import { useAuthStore } from '@stores/authStore'
 import * as z from 'zod'
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
-import type { LoginRequest, LoginResponse } from '@types'
+import { useAuthStore } from '@stores/authStore'
 
 const router = useRouter()
 const toast = useToast()
@@ -33,14 +31,9 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
-    const req: LoginRequest = {
+    const { data, error } = await authStore.login({
         username: payload.data.username,
         password: payload.data.password,
-    }
-
-    const { data, error } = await apiFetch<LoginResponse>('/login', {
-        method: 'POST',
-        body: JSON.stringify(req)
     })
 
     if (error) {
@@ -52,7 +45,6 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
         return
     }
 
-    authStore.setUser(data!)
     toast.add({ title: 'Login successful', description: `Welcome back, ${data?.username}!` })
     router.push({ name: 'app' })
 }
