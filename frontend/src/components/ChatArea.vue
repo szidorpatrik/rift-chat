@@ -33,21 +33,21 @@ const getIcon = (type: 0 | 1 | 2) => {
 </script>
 
 <template>
-    <div class="flex flex-1 flex-col gap-4 justify-between overflow-hidden rounded-lg">
+    <div class="flex flex-1 flex-col justify-between overflow-hidden rounded-lg">
 
         <!-- Header -->
-        <div v-if="channelStore.currentChannel" style="margin-bottom: -0.5rem;">
-            <p class="select-none font-bold">
-                <UIcon :name="getIcon(channelStore.currentChannel?.type || 0)"
-                       class="inline mb-0.5 size-5" />
-                {{ channelStore.currentChannel?.name }}
-            </p>
+        <div v-if="channelStore.currentChannel"
+             class="flex gap-1 pt-1.5 pb-2.5 items-center select-none font-bold">
+
+            <UIcon :name="getIcon(channelStore.currentChannel?.type || 0)" class="size-5" />
+
+            <span>{{ channelStore.currentChannel?.name }}</span>
         </div>
 
         <UScrollArea :items="virtualItems"
                      virtualize
                      orientation="vertical"
-                     class="hover-scrollbar h-full w-full border rounded-lg border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
+                     class="hover-scrollbar h-full w-full mb-4 border rounded-lg border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
                      :ui="{ viewport: 'gap-4 p-4' }">
 
             <template #default="{ item }">

@@ -83,70 +83,72 @@ const getIcon = (type: 0 | 1 | 2) => {
 </script>
 
 <template>
-    <div class="overflow-y-auto w-64 shrink-0 flex flex-col rounded-lg gap-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-
-        <!-- Server Context Menu -->
+    <div class="flex flex-1 flex-col w-64 justify-between overflow-hidden rounded-lg">
         <UContextMenu :items="serverHeaderActions">
-            <div class="flex flex-0 mx-4 mt-4">
-                <UButton class="p-2 max-w-fit truncate text-md font-semibold text-neutral-400 tracking-wide"
+            <div class="flex mb-1">
+                <UButton class=" max-w-fit truncate text-md font-semibold text-neutral-400 tracking-wide"
                          color="neutral"
                          variant="ghost"
-                         size="md"
+                         size="sm"
                          trailing-icon="i-lucide-chevron-down"
                          :label="serverStore.currentServer?.name || 'Select or Join a server'" />
 
-                <UButton class="p-2 max-w-fit ml-auto text-neutral-400"
+                <UButton class=" max-w-fit ml-auto text-neutral-400"
                          color="neutral"
                          variant="ghost"
-                         size="md"
+                         size="lg"
                          icon="i-lucide-user-plus" />
             </div>
         </UContextMenu>
+        <div class="overflow-y-auto shrink-0 flex flex-col flex-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
-        <!-- Empty Space Context Menu (Create Channels) -->
-        <UContextMenu :items="channelCreateActions">
-            <UScrollArea :ui="{ viewport: 'gap-2' }" class="h-full w-full px-4 pb-4 mt-0.5 hover-scrollbar">
 
-                <template v-if="serverStore.areChannelsLoaded(serverStore.currentServerId!)">
+            <!-- Server Context Menu -->
 
-                    <template v-if="!sortedChannels.length">
-                        <div class="select-none flex flex-col items-center gap-2 text-sm text-center text-neutral-500">
-                            <p>No channels yet.</p>
-                            <p>Right-click
-                                <UIcon class="inline mb-0.5" name="i-lucide-arrow-right" /> Create Channel
-                            </p>
-                        </div>
+            <!-- Empty Space Context Menu (Create Channels) -->
+            <UContextMenu :items="channelCreateActions">
+                <UScrollArea :ui="{ viewport: 'gap-2' }" class="h-full w-full p-2 mt-0.5 hover-scrollbar">
+
+                    <template v-if="serverStore.areChannelsLoaded(serverStore.currentServerId!)">
+
+                        <template v-if="!sortedChannels.length">
+                            <div class="select-none flex flex-col items-center gap-2 text-sm text-center text-neutral-500">
+                                <p>No channels yet.</p>
+                                <p>Right-click
+                                    <UIcon class="inline mb-0.5" name="i-lucide-arrow-right" /> Create Channel
+                                </p>
+                            </div>
+                        </template>
+
+                        <template v-else>
+                            <UContextMenu v-for="channel in sortedChannels"
+                                          :key="channel.id"
+                                          :items="getChannelEditActions(channel)">
+
+                                <UButton class="p-2 w-full truncate text-sm tracking-wide"
+                                         color="neutral"
+                                         variant="ghost"
+                                         size="md"
+                                         :icon="getIcon(channel.type)"
+                                         :label="channel.name"
+                                         @click="channelStore.setCurrentChannel(serverStore.currentServerId, channel.id)" />
+                            </UContextMenu>
+                        </template>
+
                     </template>
 
                     <template v-else>
-                        <UContextMenu v-for="channel in sortedChannels"
-                                      :key="channel.id"
-                                      :items="getChannelEditActions(channel)">
-
-                            <UButton class="p-2 w-full truncate text-sm tracking-wide"
-                                     color="neutral"
-                                     variant="ghost"
-                                     size="md"
-                                     :icon="getIcon(channel.type)"
-                                     :label="channel.name"
-                                     @click="channelStore.setCurrentChannel(serverStore.currentServerId, channel.id)" />
-                        </UContextMenu>
+                        <USkeleton v-for="_ in 4" class="h-8 w-full shrink-0" />
                     </template>
 
+                </UScrollArea>
+            </UContextMenu>
+            <UModal v-model:open="openCreateChannel" title="Create Channel">
+                <template #body>
+                    <CreateChannelView v-model:open="openCreateChannel" />
                 </template>
-
-                <template v-else>
-                    <USkeleton v-for="_ in 4" class="h-8 w-full shrink-0" />
-                </template>
-
-            </UScrollArea>
-        </UContextMenu>
-
-        <UModal v-model:open="openCreateChannel" title="Create Channel">
-            <template #body>
-                <CreateChannelView v-model:open="openCreateChannel" />
-            </template>
-        </UModal>
+            </UModal>
+        </div>
 
     </div>
 </template>
