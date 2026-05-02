@@ -111,7 +111,9 @@ const getIcon = (type: 0 | 1 | 2) => {
                     <template v-if="!sortedChannels.length">
                         <div class="select-none flex flex-col items-center gap-2 text-sm text-center text-neutral-500">
                             <p>No channels yet.</p>
-                            <p>Right-click <UIcon class="inline mb-0.5" name="i-lucide-arrow-right" /> Create Channel</p>
+                            <p>Right-click
+                                <UIcon class="inline mb-0.5" name="i-lucide-arrow-right" /> Create Channel
+                            </p>
                         </div>
                     </template>
 
@@ -119,10 +121,13 @@ const getIcon = (type: 0 | 1 | 2) => {
                         <UContextMenu v-for="channel in sortedChannels"
                                       :key="channel.id"
                                       :items="getChannelEditActions(channel)">
-                            <div class="h-10 w-full shrink-0 flex items-center px-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer">
-                                <UIcon :name="getIcon(channel.type)" class="mr-2" />
-                                {{ channel.name }}
-                            </div>
+
+                            <UButton class="p-2 w-full truncate text-sm tracking-wide"
+                                     color="neutral"
+                                     variant="ghost"
+                                     size="md"
+                                     :icon="getIcon(channel.type)"
+                                     :label="channel.name" />
                         </UContextMenu>
                     </template>
 
