@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { reactive } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
+import { usePublicServerStore } from '@stores/publicServerStore'
 import { useServerStore } from '@stores/serverStore'
 
 const schema = z.object({
@@ -15,7 +16,12 @@ const state = reactive<Partial<Schema>>({
 })
 
 const toast = useToast()
+const publicServerStore = usePublicServerStore()
 const serverStore = useServerStore()
+
+onMounted(async () => {
+    await publicServerStore.loadServers()
+})
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
     //TODO: Implement joining server by invite code
@@ -39,7 +45,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
         <USeparator />
 
         <div class="flex flex-1 flex-wrap justify-center gap-6 overflow-y-auto">
-            <template v-for="server in serverStore.publicServers" :key="server.id">
+            <template v-if="publicServerStore.areServersLoaded" v-for="server in publicServerStore.servers" :key="server.id">
                 <div class="w-60 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex flex-col items-center">
                     <div class="w-full h-30 mb-3 select-none pointer-events-none">
                         <img
@@ -66,6 +72,10 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
                         </template>
                     </div>
                 </div>
+            </template>
+
+            <template v-else v-for="_ in 6" :key="_">
+                <USkeleton class="w-60 h-40 rounded-lg" />
             </template>
         </div>
     </div>

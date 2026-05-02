@@ -8,7 +8,6 @@ import ChatArea from '@components/ChatArea.vue'
 import UserProfile from '@components/UserProfile.vue'
 import { useServerStore } from '@stores/serverStore'
 
-
 const authStore = useAuthStore()
 const serverStore = useServerStore()
 
@@ -20,12 +19,12 @@ onMounted(async () => {
         if (!isAuthenticated) return
 
         await serverStore.loadServers()
-        await serverStore.loadPublicServers()
-        // await loadMessages()
     } catch (error) {
         console.error('Initialization failed:', error)
     }
 })
+
+
 </script>
 
 <template>

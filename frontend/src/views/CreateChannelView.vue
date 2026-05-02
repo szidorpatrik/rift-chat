@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent, RadioGroupItem } from '@nuxt/ui';
+import { useChannelStore } from '@stores/channelStore';
 import { useServerStore } from '@stores/serverStore';
 import type { ChannelRequest } from '@types';
 import { reactive, ref } from 'vue';
 import * as z from 'zod'
 
-const toast = useToast()
 const serverStore = useServerStore()
+const channelStore = useChannelStore()
 
 const schema = z.object({
     name: z.string('Name is required').min(3, 'Must be at least 3 characters').max(100, 'Must be at most 100 characters'),
@@ -49,7 +50,7 @@ const onSubmit = async (payload: FormSubmitEvent<Schema>) => {
         position: serverStore.currentServer?.channels.length || 0,
     }
 
-    const created = await serverStore.createChannel(req)
+    const created = await channelStore.createChannel(req)
     if (created) open.value = false
 }
 
