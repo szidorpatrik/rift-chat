@@ -65,17 +65,14 @@ export const useServerStore = defineStore('server', () => {
 
     const setCurrentServer = async (serverId: string | null) => {
         const channelStore = useChannelStore()
-
         currentServerId.value = serverId
-        channelStore.setCurrentChannel(null)
 
         if (!serverId) {
-            sessionStorage.removeItem(sessionStorageKey)
+            sessionStorage.removeItem('lastServerId')
             return
         }
 
-        sessionStorage.setItem(sessionStorageKey, serverId)
-
+        sessionStorage.setItem('lastServerId', serverId)
         const server = servers.value.find(s => s.id === serverId)
         if (!server) return
 
@@ -83,7 +80,18 @@ export const useServerStore = defineStore('server', () => {
             await channelStore.loadChannels(serverId)
         }
 
-        channelStore.setCurrentChannel(server.channels?.[0]?.id ?? null)
+        // Attempt to restore the last TEXT channel
+        const savedId = channelStore.getPersistedChannelId(serverId)
+        const textChannels = server.channels.filter(c => c.type === 0)
+
+        const isValidSavedChannel = server.channels.some(c => c.id === savedId && c.type === 0)
+
+        if (savedId && isValidSavedChannel) {
+            channelStore.setCurrentChannel(serverId, savedId)
+        } else if (textChannels.length > 0) {
+            // Fallback to the first available text channel
+            channelStore.setCurrentChannel(serverId, textChannels[0].id)
+        }
     }
 
     // --- Actions (API Integrations) ---

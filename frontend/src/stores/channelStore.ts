@@ -5,10 +5,12 @@ import { channelService } from '@services/channelService'
 import { useServerStore } from '@stores/serverStore'
 
 export const useChannelStore = defineStore('channel', () => {
+    const sessionStorageKey = 'lastChannelId'
     const toast = useToast()
 
     // --- State ---
     const currentChannelId = ref<string | null>(null)
+    const activeVoiceChannelId = ref<string | null>(null)
     const loadingChannels = ref<Set<string>>(new Set())
 
     // --- Getters ---
@@ -16,10 +18,33 @@ export const useChannelStore = defineStore('channel', () => {
         const serverStore = useServerStore()
         return serverStore.currentServer?.channels.find(c => c.id === currentChannelId.value) || null
     })
+    const getChannel = computed(() => (channelId: string | null) => {
+        if (!channelId) return null
+        const serverStore = useServerStore()
+        return serverStore.currentServer?.channels.find(c => c.id === channelId) || null
+    })
+
+    const getSessionKey = (serverId: string) => `${sessionStorageKey}_${serverId}`
 
     // --- Actions ---
-    const setCurrentChannel = (channelId: string | null) => {
+    const setCurrentChannel = (serverId: string | null, channelId: string | null) => {
+        const channel = getChannel.value(channelId)
+        
+        if (channel?.type === 1) {
+            // VOICE CHANNEL LOGIC
+            activeVoiceChannelId.value = channelId
+            console.log(`Connecting to voice: ${channelId}`)
+            return
+        }
         currentChannelId.value = channelId
+        // TEXT CHANNEL LOGIC
+        if (serverId && channelId && channel?.type === 0) {
+            sessionStorage.setItem(getSessionKey(serverId), channelId)
+        }
+    }
+
+    const getPersistedChannelId = (serverId: string) => {
+        return sessionStorage.getItem(getSessionKey(serverId))
     }
 
     const loadChannels = async (serverId: string) => {
@@ -27,7 +52,7 @@ export const useChannelStore = defineStore('channel', () => {
 
         loadingChannels.value.add(serverId)
         const serverStore = useServerStore()
-        
+
         if (serverStore.areChannelsLoaded(serverId)) {
             loadingChannels.value.delete(serverId)
             return true
@@ -77,6 +102,7 @@ export const useChannelStore = defineStore('channel', () => {
     return {
         currentChannelId,
         currentChannel,
+        getPersistedChannelId,
         setCurrentChannel,
         loadChannels,
         createChannel

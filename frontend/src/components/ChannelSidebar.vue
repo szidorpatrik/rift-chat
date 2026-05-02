@@ -4,6 +4,7 @@ import type { Channel } from '@types'
 import type { ContextMenuItem } from '@nuxt/ui'
 import CreateChannelView from '@views/CreateChannelView.vue'
 import { ref, computed } from 'vue';
+import { useChannelStore } from '@stores/channelStore';
 
 const props = defineProps<{
     channels: Channel[] | []
@@ -15,10 +16,11 @@ const sortedChannels = computed(() => {
 })
 
 const serverStore = useServerStore()
+const channelStore = useChannelStore()
 const openCreateChannel = ref(false)
 
-// 1. New actions for the Server header
-const serverActions = ref<ContextMenuItem[][]>([
+// Server header actions
+const serverHeaderActions = ref<ContextMenuItem[][]>([
     [
         {
             label: 'Server Settings',
@@ -31,7 +33,7 @@ const serverActions = ref<ContextMenuItem[][]>([
     ]
 ])
 
-// 2. Actions for empty space in the sidebar (Creating channels)
+// Sidebar actions (Creating channels)
 const channelCreateActions = ref<ContextMenuItem[][]>([
     [
         {
@@ -49,7 +51,6 @@ const channelCreateActions = ref<ContextMenuItem[][]>([
     ],
 ])
 
-// 3. Changed from a static ref to a function to capture the specific channel clicked
 const getChannelEditActions = (channel: Channel): ContextMenuItem[][] => [
     [
         {
@@ -85,7 +86,7 @@ const getIcon = (type: 0 | 1 | 2) => {
     <div class="overflow-y-auto w-64 shrink-0 flex flex-col rounded-lg gap-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
         <!-- Server Context Menu -->
-        <UContextMenu :items="serverActions">
+        <UContextMenu :items="serverHeaderActions">
             <div class="flex flex-0 mx-4 mt-4">
                 <UButton class="p-2 max-w-fit truncate text-md font-semibold text-neutral-400 tracking-wide"
                          color="neutral"
@@ -127,7 +128,8 @@ const getIcon = (type: 0 | 1 | 2) => {
                                      variant="ghost"
                                      size="md"
                                      :icon="getIcon(channel.type)"
-                                     :label="channel.name" />
+                                     :label="channel.name"
+                                     @click="channelStore.setCurrentChannel(serverStore.currentServerId, channel.id)" />
                         </UContextMenu>
                     </template>
 
