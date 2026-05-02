@@ -18,6 +18,7 @@
       "@ui/*": ["./src/components/ui/*"],
       "@assets/*": ["./src/assets/*"],
       "@stores/*": ["./src/stores/*"],
+      "@services/*": ["./src/services/*"],
       "@views/*": ["./src/views/*"],
       "@/*": ["./src/*"],
     },

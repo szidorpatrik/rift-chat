@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ServerResponse, ChannelResponse, ChannelRequest, ServerRequest, ErrorResponse } from '@types'
-import { apiFetch } from '@utils/api'
+import type { ServerResponse, ChannelResponse, ChannelRequest, ServerRequest } from '@types'
+import { serverService } from '@services/serverService'
+import { channelService } from '@services/channelService'
 
 export interface Server extends ServerResponse {
     channels: ChannelResponse[]
@@ -17,17 +18,15 @@ export const useServerStore = defineStore('server', () => {
 
     const currentServerId = ref<string | null>(null)
     const currentChannelId = ref<string | null>(null)
+    const loadingChannels = ref<Set<string>>(new Set())
 
     // --- Getters ---
     const currentServer = computed(() => servers.value.find(s => s.id === currentServerId.value) || null)
     const currentChannel = computed(() => currentServer.value?.channels.find(c => c.id === currentChannelId.value) || null)
 
-    // --- Actions ---
+    // --- Actions (State Mutations) ---
     const setServers = async (serverArray: ServerResponse[]) => {
-        servers.value = serverArray.map(server => ({
-            ...server,
-            channels: []
-        }))
+        servers.value = serverArray.map(server => ({ ...server, channels: [] }))
 
         if (servers.value.length === 0) {
             setCurrentServer(null)
@@ -50,6 +49,10 @@ export const useServerStore = defineStore('server', () => {
         }
     }
 
+    const addPublicServer = (server: ServerResponse) => {
+        publicServers.value.push(server)
+    }
+
     const setCurrentServer = async (serverId: string | null) => {
         currentServerId.value = serverId
         currentChannelId.value = null
@@ -62,7 +65,6 @@ export const useServerStore = defineStore('server', () => {
         sessionStorage.setItem(sessionStorageKey, serverId)
 
         const server = servers.value.find(s => s.id === serverId)
-
         if (!server) return
 
         if (server.channels.length === 0) {
@@ -76,13 +78,13 @@ export const useServerStore = defineStore('server', () => {
         currentChannelId.value = channelId
     }
 
+    // --- Actions (API Integrations) ---
     const loadServers = async () => {
-        const { data, error } = await apiFetch<ServerResponse[]>('/servers')
+        const { data, error } = await serverService.getServers()
         if (error) {
             toast.add({ title: 'Error', description: error.error, color: 'error' })
             return false
         }
-
         if (data) {
             setServers(data)
             return true
@@ -90,19 +92,16 @@ export const useServerStore = defineStore('server', () => {
         return false
     }
 
-    const loadingChannels = ref<Set<string>>(new Set())
     const loadChannels = async (serverId: string) => {
         if (loadingChannels.value.has(serverId)) return false
-
         loadingChannels.value.add(serverId)
 
         try {
-            const { data, error } = await apiFetch<ChannelResponse[]>(`/servers/${serverId}/channels`)
+            const { data, error } = await channelService.getChannels(serverId)
             if (error) {
                 toast.add({ title: 'Error', description: error.error, color: 'error' })
                 return false
             }
-
             if (data) {
                 const server = servers.value.find(s => s.id === serverId)
                 if (server) server.channels = data
@@ -111,7 +110,6 @@ export const useServerStore = defineStore('server', () => {
         } finally {
             loadingChannels.value.delete(serverId)
         }
-
         return false
     }
 
@@ -121,15 +119,8 @@ export const useServerStore = defineStore('server', () => {
             return false
         }
 
-        const position = currentServer.value?.channels.length || 0
-        const { data, error } = await apiFetch<ChannelResponse>(`/servers/${currentServer.value?.id}/channels`, {
-            method: 'POST',
-            body: JSON.stringify({
-                name: payload.name,
-                type: payload.type,
-                position: position,
-            }),
-        })
+        const position = currentServer.value.channels.length || 0
+        const { data, error } = await channelService.createChannel(currentServer.value.id, payload, position)
 
         if (error) {
             toast.add({ title: 'Error', description: error.error, color: 'error' })
@@ -140,22 +131,19 @@ export const useServerStore = defineStore('server', () => {
             const server = servers.value.find(s => s.id === data.server_id)
             if (server) {
                 server.channels.push(data)
-            } else {
-                toast.add({ title: 'Error', description: 'Server not found', color: 'error' })
-                return false
+                toast.add({ title: 'Channel created', description: `Channel "${payload.name}" has been created.`, color: 'success' })
+                return true
             }
         }
-        toast.add({ title: 'Channel created', description: `Channel "${payload.name}" has been created.`, color: 'success' })
-        return true
+        return false
     }
 
     const loadPublicServers = async () => {
-        const { data, error } = await apiFetch<ServerResponse[]>('/servers/public')
+        const { data, error } = await serverService.getPublicServers()
         if (error) {
             toast.add({ title: 'Error', description: error.error, color: 'error' })
             return false
         }
-
         if (data) {
             publicServers.value = data
             return true
@@ -163,21 +151,12 @@ export const useServerStore = defineStore('server', () => {
         return false
     }
 
-    const addPublicServer = (server: ServerResponse) => {
-        publicServers.value.push(server)
-    }
-
     const joinPublicServer = async (serverId: string) => {
-        const { data, error } = await apiFetch<ServerResponse>('/servers/join', {
-            method: 'POST',
-            body: JSON.stringify({ server_id: serverId }),
-        })
-
+        const { data, error } = await serverService.joinPublicServer(serverId)
         if (error) {
-            toast.add({ title: 'Failed to join server', description: error.error, color: 'error' })
+            toast.add({ title: 'Failed to join', description: error.error, color: 'error' })
             return false
         }
-
         if (data) {
             addServer(data)
             return true
@@ -186,35 +165,19 @@ export const useServerStore = defineStore('server', () => {
     }
 
     const createServer = async (payload: ServerRequest) => {
-        const { data, error } = await apiFetch<ServerResponse>('/servers', {
-            method: 'POST',
-            body: JSON.stringify({
-                name: payload.name,
-                is_public: payload.is_public,
-                description: payload.description,
-            }),
-        })
-
+        const { data, error } = await serverService.createServer(payload)
         if (error) return { error }
-
         if (data) {
             addServer(data)
-            if (data.is_public) {
-                addPublicServer(data)
-            }
+            if (data.is_public) addPublicServer(data)
             return { data }
         }
         return { error }
     }
 
     const joinServerByInvite = async (inviteCode: string) => {
-        const { data, error } = await apiFetch<ServerResponse>('/servers/join/invite', {
-            method: 'POST',
-            body: JSON.stringify({ invite_code: inviteCode }),
-        })
-
+        const { data, error } = await serverService.joinByInvite(inviteCode)
         if (error) return { error }
-
         if (data) {
             addServer(data)
             return { data }
@@ -223,15 +186,12 @@ export const useServerStore = defineStore('server', () => {
     }
 
     return {
-        // State
         servers,
         publicServers,
         currentServerId,
         currentChannelId,
-        // Getters
         currentServer,
         currentChannel,
-        // Actions
         addServer,
         setServers,
         removeServer,
