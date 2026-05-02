@@ -3,10 +3,19 @@ import type { RadioGroupItem } from '@nuxt/ui';
 import { useServerStore } from '@stores/serverStore';
 import CreateServerView from '@views/CreateServerView.vue';
 import JoinServerView from '@views/JoinServerView.vue';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
 const openCreateServer = ref(false)
 const serverStore = useServerStore()
+
+const selectedServerId = computed({
+    get: () => serverStore.currentServerId,
+    set: (newId) => {
+        if (newId) {
+            serverStore.setCurrentServer(newId)
+        }
+    }
+})
 
 const servers = computed<RadioGroupItem[]>(() =>
     serverStore.servers.map(s => ({
@@ -15,18 +24,12 @@ const servers = computed<RadioGroupItem[]>(() =>
         class: 'size-14 mb-2 cursor-pointer flex items-center justify-center font-semibold text-white',
     }))
 )
-
-watch(() => serverStore.currentServerId, (newId) => {
-    if (newId) {
-        sessionStorage.setItem('lastServerId', newId.toString())
-    }
-})
 </script>
 
 <template>
     <div class="overflow-y-auto w-14 shrink-0 flex flex-col items-center rounded-lg p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <template v-if="serverStore.servers.length > 0">
-            <URadioGroup v-model="serverStore.currentServerId"
+            <URadioGroup v-model="selectedServerId"
                          :items="servers"
                          size="md"
                          indicator="hidden"
