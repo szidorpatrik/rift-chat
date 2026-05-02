@@ -99,12 +99,29 @@ export const useChannelStore = defineStore('channel', () => {
         return false
     }
 
+    const deleteChannel = async (serverId: string, channelId: string) => {
+        const serverStore = useServerStore()
+        
+        const { error } = await channelService.deleteChannel(serverId, channelId)
+
+        if (error) {
+            toast.add({ title: 'Error', description: error.error, color: 'error' })
+            return false
+        }
+
+        serverStore.removeChannelFromServer(serverId, channelId)
+        toast.add({ title: 'Channel deleted', description: `Channel has been deleted.`, color: 'success' })
+        return true
+    }
+
     return {
         currentChannelId,
         currentChannel,
+        activeVoiceChannelId,
         getPersistedChannelId,
         setCurrentChannel,
         loadChannels,
-        createChannel
+        createChannel,
+        deleteChannel,
     }
 })

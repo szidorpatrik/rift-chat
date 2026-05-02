@@ -36,10 +36,13 @@ func (cfg *ApiConfig) registerServerRoutes(mux *http.ServeMux) {
 func (cfg *ApiConfig) registerChannelRoutes(mux *http.ServeMux) {
 	getChannels := http.HandlerFunc(cfg.GetServerChannelsHandler)
 	createChannel := http.HandlerFunc(cfg.CreateChannelHandler)
+	deleteChannel := http.HandlerFunc(cfg.DeleteChannelHandler)
 
 	protectedGetChannels := cfg.RequireAuth(cfg.ServerMembershipMiddleware(getChannels))
 	protectedCreateChannel := cfg.RequireAuth(cfg.ServerMembershipMiddleware(createChannel))
+	protectedDeleteChannel := cfg.RequireAuth(cfg.ServerMembershipMiddleware(deleteChannel))
 
 	mux.Handle(newEndpoint("GET", "/servers/{server_id}/channels"), protectedGetChannels)
 	mux.Handle(newEndpoint("POST", "/servers/{server_id}/channels"), protectedCreateChannel)
+	mux.Handle(newEndpoint("DELETE", "/servers/{server_id}/channels/{channel_id}"), protectedDeleteChannel)
 }

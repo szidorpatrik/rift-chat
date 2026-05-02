@@ -66,8 +66,7 @@ const getChannelEditActions = (channel: Channel): ContextMenuItem[][] => [
             icon: 'i-lucide-trash-2',
             color: 'error',
             onClick: () => {
-                console.log('Deleting channel:', channel.name)
-                // Add your channel delete logic here
+                channelStore.deleteChannel(serverStore.currentServerId!, channel.id)
             }
         },
     ],
@@ -83,13 +82,14 @@ const getIcon = (type: 0 | 1 | 2) => {
 </script>
 
 <template>
-    <div class="flex flex-1 flex-col w-64 justify-between overflow-hidden rounded-lg">
+    <div class="select-none flex flex-1 flex-col w-64 justify-between overflow-hidden rounded-lg">
+        <!-- Server Context Menu -->
         <UContextMenu :items="serverHeaderActions">
             <div class="flex mb-1">
                 <UButton class=" max-w-fit truncate text-md font-semibold text-neutral-400 tracking-wide"
                          color="neutral"
                          variant="ghost"
-                         size="sm"
+                         size="xs"
                          trailing-icon="i-lucide-chevron-down"
                          :label="serverStore.currentServer?.name || 'Select or Join a server'" />
 
@@ -101,10 +101,6 @@ const getIcon = (type: 0 | 1 | 2) => {
             </div>
         </UContextMenu>
         <div class="overflow-y-auto shrink-0 flex flex-col flex-1 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-
-
-            <!-- Server Context Menu -->
-
             <!-- Empty Space Context Menu (Create Channels) -->
             <UContextMenu :items="channelCreateActions">
                 <UScrollArea :ui="{ viewport: 'gap-2' }" class="h-full w-full p-2 mt-0.5 hover-scrollbar">
@@ -112,11 +108,13 @@ const getIcon = (type: 0 | 1 | 2) => {
                     <template v-if="serverStore.areChannelsLoaded(serverStore.currentServerId!)">
 
                         <template v-if="!sortedChannels.length">
-                            <div class="select-none flex flex-col items-center gap-2 text-sm text-center text-neutral-500">
+                            <div class="mt-2 select-none flex flex-col items-center gap-2 text-sm text-center text-neutral-500">
                                 <p>No channels yet.</p>
-                                <p>Right-click
-                                    <UIcon class="inline mb-0.5" name="i-lucide-arrow-right" /> Create Channel
-                                </p>
+                                <div class="flex items-center gap-2">
+                                    <span>Right-click</span>
+                                    <UIcon class="inline mb-0.5" name="i-lucide-arrow-right" />
+                                    <span>Create Channel</span>
+                                </div>
                             </div>
                         </template>
 

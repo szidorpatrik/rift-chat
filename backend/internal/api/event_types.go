@@ -34,6 +34,8 @@ var eventName = map[EventType]string{
 	EventChannelsRetrieved:           "channels_retrieved",
 	EventChannelCreated:              "channel_created",
 	EventChannelCreateFailed:         "channel_create_failed",
+	EventChannelDeleteFailed:         "channel_delete_failed",
+	EventChannelDeleted:              "channel_deleted",
 }
 
 const (
@@ -68,6 +70,8 @@ const (
 	EventChannelsRetrieved
 	EventChannelCreateFailed
 	EventChannelCreated
+	EventChannelDeleteFailed
+	EventChannelDeleted
 )
 
 func (e EventType) String() string {

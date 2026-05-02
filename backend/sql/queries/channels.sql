@@ -16,3 +16,6 @@ SELECT * FROM channels WHERE server_id = $1 ORDER BY position ASC;
 
 -- name: GetChannelById :one
 SELECT * FROM channels WHERE id = $1;
+
+-- name: DeleteChannelById :exec
+DELETE FROM channels WHERE id = $1 and server_id = $2;

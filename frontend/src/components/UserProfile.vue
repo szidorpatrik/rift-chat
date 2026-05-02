@@ -111,7 +111,7 @@ const onLogout = async () => {
             </UButton>
         </UDropdownMenu>
 
-        <div class="h-full">
+        <div class="select-none h-full">
             <div class="flex gap-1 h-full p-1">
                 <UButton id="btn-mute" variant="ghost" color="neutral" size="xl" class="rounded-lg">
                     <UIcon name="i-lucide-mic" size="20" />

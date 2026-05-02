@@ -37,10 +37,9 @@ const getIcon = (type: 0 | 1 | 2) => {
 
         <!-- Header -->
         <div v-if="channelStore.currentChannel"
-             class="flex gap-1 pt-1.5 pb-2.5 items-center select-none font-bold">
+             class="flex gap-1 pt-1.5 pb-2.5 items-center select-none font-bold text-muted">
 
             <UIcon :name="getIcon(channelStore.currentChannel?.type || 0)" class="size-5" />
-
             <span>{{ channelStore.currentChannel?.name }}</span>
         </div>
 
@@ -56,8 +55,7 @@ const getIcon = (type: 0 | 1 | 2) => {
                 <div v-if="item.type === 'header' && channelStore.currentChannel"
                      class="flex flex-col gap-2 p-4 border-b border-neutral-100 dark:border-neutral-800 mb-4">
                     <UIcon :name="getIcon(channelStore.currentChannel?.type || 0)"
-                           size="xs"
-                           class="max-w-24 rounded-full p-3 bg-white dark:bg-neutral-800 shadow-sm" />
+                           class="size-20 rounded-full p-3 bg-white dark:bg-neutral-800 shadow-sm" />
                     <p class="select-none text-2xl font-bold">
                         Welcome to
                         <UIcon :name="getIcon(channelStore.currentChannel?.type || 0)"
@@ -66,7 +64,7 @@ const getIcon = (type: 0 | 1 | 2) => {
                     <p class="text-muted">
                         This is the beginning of the
                         <UIcon :name="getIcon(channelStore.currentChannel?.type || 0)"
-                               class="inline mb-0.5 me-0" /><strong>{{ channelStore.currentChannel?.name }}</strong>
+                               class="inline mb-0.5 me-0 max-w-4" /><strong>{{ channelStore.currentChannel?.name }}</strong>
                         channel.
                     </p>
                 </div>

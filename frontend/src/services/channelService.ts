@@ -15,6 +15,12 @@ export const channelService = {
                 position,
             }),
         })
+    },
+
+    async deleteChannel(serverId: string, channelId: string) {
+        return apiFetch(`/servers/${serverId}/channels/${channelId}`, {
+            method: 'DELETE',
+        })
     }
 }
 

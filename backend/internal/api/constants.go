@@ -10,6 +10,7 @@ const (
 
 	userContextKey   = "user_id"
 	serverContextKey = "server_id"
+	channelContextKey = "channel_id"
 
 	accessTokenExpiry  = time.Hour
 	refreshTokenExpiry = time.Hour * 24 * 30 // 30 days

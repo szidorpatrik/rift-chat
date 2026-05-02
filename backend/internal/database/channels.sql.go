@@ -22,7 +22,7 @@ INSERT INTO
     )
 VALUES ($1, $2, $3, $4, $5)
 RETURNING
-    id, server_id, name, type, position, created_at
+    id, server_id, name, type, position, created_at, updated_at
 `
 
 type CreateChannelParams struct {
@@ -49,12 +49,27 @@ func (q *Queries) CreateChannel(ctx context.Context, arg CreateChannelParams) (C
 		&i.Type,
 		&i.Position,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
+const deleteChannelById = `-- name: DeleteChannelById :exec
+DELETE FROM channels WHERE id = $1 and server_id = $2
+`
+
+type DeleteChannelByIdParams struct {
+	ID       uuid.UUID
+	ServerID uuid.UUID
+}
+
+func (q *Queries) DeleteChannelById(ctx context.Context, arg DeleteChannelByIdParams) error {
+	_, err := q.db.ExecContext(ctx, deleteChannelById, arg.ID, arg.ServerID)
+	return err
+}
+
 const getChannelById = `-- name: GetChannelById :one
-SELECT id, server_id, name, type, position, created_at FROM channels WHERE id = $1
+SELECT id, server_id, name, type, position, created_at, updated_at FROM channels WHERE id = $1
 `
 
 func (q *Queries) GetChannelById(ctx context.Context, id uuid.UUID) (Channel, error) {
@@ -67,12 +82,13 @@ func (q *Queries) GetChannelById(ctx context.Context, id uuid.UUID) (Channel, er
 		&i.Type,
 		&i.Position,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getChannelsForServer = `-- name: GetChannelsForServer :many
-SELECT id, server_id, name, type, position, created_at FROM channels WHERE server_id = $1 ORDER BY position ASC
+SELECT id, server_id, name, type, position, created_at, updated_at FROM channels WHERE server_id = $1 ORDER BY position ASC
 `
 
 func (q *Queries) GetChannelsForServer(ctx context.Context, serverID uuid.UUID) ([]Channel, error) {
@@ -91,6 +107,7 @@ func (q *Queries) GetChannelsForServer(ctx context.Context, serverID uuid.UUID) 
 			&i.Type,
 			&i.Position,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}

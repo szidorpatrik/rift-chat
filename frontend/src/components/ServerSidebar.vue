@@ -27,7 +27,7 @@ const servers = computed<RadioGroupItem[]>(() =>
 </script>
 
 <template>
-    <div class="overflow-y-auto w-14 shrink-0 flex flex-col items-center rounded-lg p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div class="select-none overflow-y-auto w-14 shrink-0 flex flex-col items-center rounded-lg p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <template v-if="serverStore.servers.length > 0">
             <URadioGroup v-model="selectedServerId"
                          :items="servers"

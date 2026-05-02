@@ -17,7 +17,7 @@ export const usePublicServerStore = defineStore('publicServer', () => {
             return true
         }
 
-        const { data, error } = await serverService.getServers()
+        const { data, error } = await serverService.getPublicServers()
         if (error) {
             toast.add({ title: 'Error', description: error.error, color: 'error' })
             return false

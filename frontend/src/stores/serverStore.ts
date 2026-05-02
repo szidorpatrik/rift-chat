@@ -146,6 +146,13 @@ export const useServerStore = defineStore('server', () => {
         return { error }
     }
 
+    const removeChannelFromServer = (serverId: string, channelId: string) => {
+        const server = servers.value.find(s => s.id === serverId)
+        if (server) {
+            server.channels = server.channels.filter(c => c.id !== channelId)
+        }
+    }
+
     return {
         servers,
         currentServerId,
@@ -160,6 +167,7 @@ export const useServerStore = defineStore('server', () => {
         loadServers,
         joinPublicServer,
         createServer,
-        joinServerByInvite
+        joinServerByInvite,
+        removeChannelFromServer,
     }
 })

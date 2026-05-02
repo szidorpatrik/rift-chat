@@ -102,3 +102,34 @@ func (cfg *ApiConfig) CreateChannelHandler(w http.ResponseWriter, r *http.Reques
 	}
 	RespondWithJSON(w, http.StatusCreated, res)
 }
+
+func (cfg *ApiConfig) DeleteChannelHandler(w http.ResponseWriter, r *http.Request) {
+	serverId := r.Context().Value(serverContextKey).(uuid.UUID)
+	channelIdStr := r.PathValue("channel_id")
+	if channelIdStr == "" {
+        cfg.LogWarn(r, "missing channel_id path parameter", serverId, EventMissingParameter)
+        RespondWithError(w, http.StatusBadRequest, "channel_id path parameter is required")
+        return
+    }
+
+	channelId, err := uuid.Parse(channelIdStr)
+	if err != nil {
+		cfg.LogWarn(r, "invalid channel ID", serverId, EventChannelDeleteFailed)
+		RespondWithError(w, http.StatusBadRequest, "invalid channel ID")
+		return
+	}
+
+	params := database.DeleteChannelByIdParams{
+		ID:       channelId,
+		ServerID: serverId,
+	}
+
+	if err := cfg.DbQueries.DeleteChannelById(r.Context(), params); err != nil {
+		cfg.LogError(r, err, EventChannelDeleteFailed, "channel_id", channelId)
+		RespondWithError(w, http.StatusInternalServerError, "failed to delete channel")
+		return
+	}
+
+	cfg.LogInfo(r, "channel deleted successfully", channelId, EventChannelDeleted)
+	RespondNoContent(w)
+}

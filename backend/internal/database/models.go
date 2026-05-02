@@ -26,6 +26,7 @@ type Channel struct {
 	Type      int32
 	Position  int32
 	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
 }
 
 type Message struct {
