@@ -11,7 +11,7 @@ const props = defineProps<{
 
 
 const sortedChannels = computed(() => {
-  return [...props.channels].sort((a, b) => a.position - b.position)
+    return [...props.channels].sort((a, b) => a.position - b.position)
 })
 
 const serverStore = useServerStore()
@@ -43,7 +43,8 @@ const channelCreateActions = ref<ContextMenuItem[][]>([
         },
         {
             label: 'Create Category',
-            icon: 'i-lucide-folder-plus'
+            icon: 'i-lucide-folder-plus',
+            disabled: true,
         },
     ],
 ])
@@ -105,15 +106,26 @@ const getIcon = (type: 0 | 1 | 2) => {
         <UContextMenu :items="channelCreateActions">
             <UScrollArea :ui="{ viewport: 'gap-2' }" class="h-full w-full px-4 pb-4 mt-0.5 hover-scrollbar">
 
-                <template v-if="sortedChannels.length">
-                    <UContextMenu v-for="channel in sortedChannels"
-                                  :key="channel.id"
-                                  :items="getChannelEditActions(channel)">
-                        <div class="h-10 w-full shrink-0 flex items-center px-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer">
-                            <UIcon :name="getIcon(channel.type)" class="mr-2" />
-                            {{ channel.name }}
+                <template v-if="serverStore.areChannelsLoaded(serverStore.currentServerId!)">
+
+                    <template v-if="!sortedChannels.length">
+                        <div class="select-none flex flex-col items-center gap-2 text-sm text-center text-neutral-500">
+                            <p>No channels yet.</p>
+                            <p>Right-click <UIcon class="inline mb-0.5" name="i-lucide-arrow-right" /> Create Channel</p>
                         </div>
-                    </UContextMenu>
+                    </template>
+
+                    <template v-else>
+                        <UContextMenu v-for="channel in sortedChannels"
+                                      :key="channel.id"
+                                      :items="getChannelEditActions(channel)">
+                            <div class="h-10 w-full shrink-0 flex items-center px-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer">
+                                <UIcon :name="getIcon(channel.type)" class="mr-2" />
+                                {{ channel.name }}
+                            </div>
+                        </UContextMenu>
+                    </template>
+
                 </template>
 
                 <template v-else>

@@ -27,6 +27,11 @@ export const useChannelStore = defineStore('channel', () => {
 
         loadingChannels.value.add(serverId)
         const serverStore = useServerStore()
+        
+        if (serverStore.areChannelsLoaded(serverId)) {
+            loadingChannels.value.delete(serverId)
+            return true
+        }
 
         try {
             const { data, error } = await channelService.getChannels(serverId)
@@ -36,6 +41,7 @@ export const useChannelStore = defineStore('channel', () => {
             }
             if (data) {
                 serverStore.setServerChannels(serverId, data)
+                serverStore.servers.find(s => s.id === serverId)!.channelsLoaded = true
                 return true
             }
         } finally {

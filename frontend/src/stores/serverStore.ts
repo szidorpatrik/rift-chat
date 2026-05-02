@@ -6,7 +6,8 @@ import { usePublicServerStore } from '@stores/publicServerStore'
 import { useChannelStore } from '@stores/channelStore'
 
 export interface Server extends ServerResponse {
-    channels: ChannelResponse[]
+    channels: ChannelResponse[],
+    channelsLoaded: boolean
 }
 
 export const useServerStore = defineStore('server', () => {
@@ -19,6 +20,10 @@ export const useServerStore = defineStore('server', () => {
 
     // --- Getters ---
     const currentServer = computed(() => servers.value.find(s => s.id === currentServerId.value) || null)
+    const areChannelsLoaded = computed(() => (serverId: string) => {
+        const server = servers.value.find(s => s.id === serverId)
+        return server ? server.channelsLoaded : false
+    })
 
     // --- Actions (Mutations) ---
     const setServerChannels = (serverId: string, channels: ChannelResponse[]) => {
@@ -32,7 +37,7 @@ export const useServerStore = defineStore('server', () => {
     }
 
     const setServers = async (serverArray: ServerResponse[]) => {
-        servers.value = serverArray.map(server => ({ ...server, channels: [] }))
+        servers.value = serverArray.map(server => ({ ...server, channels: [], channelsLoaded: false }))
 
         if (servers.value.length === 0) {
             setCurrentServer(null)
@@ -47,7 +52,7 @@ export const useServerStore = defineStore('server', () => {
     }
 
     const addServer = (server: ServerResponse) => {
-        servers.value.push({ ...server, channels: [] })
+        servers.value.push({ ...server, channels: [], channelsLoaded: false })
         setCurrentServer(server.id)
     }
 
@@ -137,6 +142,7 @@ export const useServerStore = defineStore('server', () => {
         servers,
         currentServerId,
         currentServer,
+        areChannelsLoaded,
         setServerChannels,
         addChannelToServer,
         setServers,
