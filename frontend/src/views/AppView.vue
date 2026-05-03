@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { type Message } from '@types'
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { useAuthStore } from '@stores/authStore'
 import ServerSidebar from '@components/ServerSidebar.vue'
 import ChannelSidebar from '@components/ChannelSidebar.vue'
@@ -11,10 +10,8 @@ import { useServerStore } from '@stores/serverStore'
 const authStore = useAuthStore()
 const serverStore = useServerStore()
 
-const messageList = ref<Message[]>([])
-
 onMounted(async () => {
-   try {
+    try {
         const isAuthenticated = await authStore.handleSessionCheck()
         if (!isAuthenticated) return
 
@@ -23,18 +20,16 @@ onMounted(async () => {
         console.error('Initialization failed:', error)
     }
 })
-
-
 </script>
 
 <template>
-    <div class="flex flex-1 h-full gap-4">
+    <div class="flex flex-1 h-full gap-4 min-w-0">
 
-        <div class="flex flex-col gap-4 h-full">
+        <div class="flex flex-col gap-4 h-full w-full min-w-0 max-w-72">
 
-            <div class="flex flex-1 gap-4 min-h-0">
-                <ServerSidebar />
-                <ChannelSidebar :channels="serverStore.currentServer?.channels || []" />
+            <div class="flex flex-1 gap-4 min-h-0 min-w-0">
+                <ServerSidebar class="shrink-0" />
+                <ChannelSidebar class="shrink-0" />
             </div>
 
             <UserProfile :username="authStore.currentUser?.username"
@@ -43,7 +38,7 @@ onMounted(async () => {
                          :status="authStore.currentUser?.status" />
         </div>
 
-        <ChatArea :messages="messageList" />
+        <ChatArea class="min-w-0 flex-1" />
 
     </div>
 </template>

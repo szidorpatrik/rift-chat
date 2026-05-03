@@ -74,18 +74,14 @@ type ServerResponse struct {
 	UpdatedAt     time.Time `json:"updated_at,omitempty"`
 }
 
-type ServersForUserResponse struct {
-	Servers []ServerResponse `json:"servers"`
-}
-
 type ServerJoinRequest struct {
 	ServerId uuid.UUID `json:"server_id"`
 }
 
 type ChannelCreateRequest struct {
-	Name     string    `json:"name"`
-	Type     int32     `json:"type"`
-	Position int32     `json:"position"`
+	Name     string `json:"name"`
+	Type     int32  `json:"type"`
+	Position int32  `json:"position"`
 }
 
 type ChannelResponse struct {
@@ -96,6 +92,10 @@ type ChannelResponse struct {
 	Position int32     `json:"position"`
 }
 
-type ServerChannelsResponse struct {
-	Channels []ChannelResponse `json:"channels"`
+type MembersResponse struct {
+	ID          uuid.UUID `json:"id"`
+	Username    string    `json:"username"`
+	Status      string    `json:"status"`
+	AvatarUrl   string    `json:"avatar_url,omitempty"`
+	Description string    `json:"description,omitempty"`
 }

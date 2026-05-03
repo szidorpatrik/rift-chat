@@ -107,10 +107,10 @@ func (cfg *ApiConfig) DeleteChannelHandler(w http.ResponseWriter, r *http.Reques
 	serverId := r.Context().Value(serverContextKey).(uuid.UUID)
 	channelIdStr := r.PathValue("channel_id")
 	if channelIdStr == "" {
-        cfg.LogWarn(r, "missing channel_id path parameter", serverId, EventMissingParameter)
-        RespondWithError(w, http.StatusBadRequest, "channel_id path parameter is required")
-        return
-    }
+		cfg.LogWarn(r, "missing channel_id path parameter", serverId, EventMissingParameter)
+		RespondWithError(w, http.StatusBadRequest, "channel_id path parameter is required")
+		return
+	}
 
 	channelId, err := uuid.Parse(channelIdStr)
 	if err != nil {

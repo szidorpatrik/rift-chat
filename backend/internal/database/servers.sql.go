@@ -118,6 +118,67 @@ func (q *Queries) GetServerById(ctx context.Context, id uuid.UUID) (Server, erro
 	return i, err
 }
 
+const getServerMembers = `-- name: GetServerMembers :many
+SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at, deleted_at, description, server_id, user_id, server_name, joined_at FROM users
+INNER JOIN server_members ON server_members.user_id = users.id
+WHERE server_members.server_id = $1
+`
+
+type GetServerMembersRow struct {
+	ID           uuid.UUID
+	Username     string
+	Email        string
+	AvatarUrl    sql.NullString
+	Status       sql.NullString
+	PasswordHash string `json:"-"`
+	CreatedAt    sql.NullTime
+	UpdatedAt    sql.NullTime
+	DeletedAt    sql.NullTime
+	Description  sql.NullString
+	ServerID     uuid.UUID
+	UserID       uuid.UUID
+	ServerName   sql.NullString
+	JoinedAt     sql.NullTime
+}
+
+func (q *Queries) GetServerMembers(ctx context.Context, serverID uuid.UUID) ([]GetServerMembersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getServerMembers, serverID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetServerMembersRow
+	for rows.Next() {
+		var i GetServerMembersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Email,
+			&i.AvatarUrl,
+			&i.Status,
+			&i.PasswordHash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.Description,
+			&i.ServerID,
+			&i.UserID,
+			&i.ServerName,
+			&i.JoinedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getServersByUserId = `-- name: GetServersByUserId :many
 SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at, background_url
 FROM servers

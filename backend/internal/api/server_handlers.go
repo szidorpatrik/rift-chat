@@ -173,9 +173,8 @@ func (cfg *ApiConfig) JoinServerHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := cfg.DbQueries.JoinServer(r.Context(), params); err != nil {
-		var pgErr *pgconn.PgError
 
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == "23505" {
 			cfg.LogWarn(r, "user already a member of the server", userId, EventServerJoinFailed, "server_id", serverId)
 			RespondWithError(w, http.StatusConflict, "you are already a member of this server")
 			return
@@ -187,6 +186,32 @@ func (cfg *ApiConfig) JoinServerHandler(w http.ResponseWriter, r *http.Request) 
 
 	cfg.LogInfo(r, "server join successful", userId, EventServerJoinSuccess, "server_id", serverId)
 	res := getServerResponse(server)
+	RespondWithJSON(w, http.StatusOK, res)
+}
+
+func (cfg *ApiConfig) GetServerMembersHandler(w http.ResponseWriter, r *http.Request) {
+	serverId := r.Context().Value(serverContextKey).(uuid.UUID)
+	userId := r.Context().Value(userContextKey).(uuid.UUID)
+
+	members, err := cfg.DbQueries.GetServerMembers(r.Context(), serverId)
+	if err != nil {
+		cfg.LogError(r, err, EventDbError)
+		RespondWithError(w, http.StatusInternalServerError, "something went wrong")
+		return
+	}
+
+	cfg.LogInfo(r, "server members listed", userId, ServerMembersListed)
+
+	res := make([]MembersResponse, len(members))
+	for i, member := range members {
+		res[i] = MembersResponse{
+			ID:          member.UserID,
+			Username:    member.Username,
+			Status:      member.Status.String,
+			AvatarUrl:   member.AvatarUrl.String,
+			Description: member.Description.String,
+		}
+	}
 	RespondWithJSON(w, http.StatusOK, res)
 }
 

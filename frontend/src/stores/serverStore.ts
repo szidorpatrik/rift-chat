@@ -1,13 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ServerResponse, ChannelResponse, ServerRequest } from '@types'
+import type { ServerResponse, ChannelResponse, ServerRequest, MemberResponse } from '@types'
 import { serverService } from '@services/serverService'
 import { usePublicServerStore } from '@stores/publicServerStore'
 import { useChannelStore } from '@stores/channelStore'
+import { useMemberStore } from './memberStore'
 
 export interface Server extends ServerResponse {
     channels: ChannelResponse[],
-    channelsLoaded: boolean
+    members: MemberResponse[],
+    channelsLoaded: boolean,
+    membersLoaded: boolean,
 }
 
 export const useServerStore = defineStore('server', () => {
@@ -21,23 +24,33 @@ export const useServerStore = defineStore('server', () => {
     // --- Getters ---
     const currentServer = computed(() => servers.value.find(s => s.id === currentServerId.value) || null)
     const areChannelsLoaded = computed(() => (serverId: string) => {
-        const server = servers.value.find(s => s.id === serverId)
+        const server = getServer(serverId)
         return server ? server.channelsLoaded : false
+    })
+    const areMembersLoaded = computed(() => (serverId: string) => {
+        const server = getServer(serverId)
+        return server ? server.membersLoaded : false
     })
 
     // --- Actions (Mutations) ---
     const setServerChannels = (serverId: string, channels: ChannelResponse[]) => {
-        const server = servers.value.find(s => s.id === serverId)
+        const server = getServer(serverId)
         if (server) server.channels = channels
     }
 
     const addChannelToServer = (serverId: string, channel: ChannelResponse) => {
-        const server = servers.value.find(s => s.id === serverId)
+        const server = getServer(serverId)
         if (server) server.channels.push(channel)
     }
 
     const setServers = async (serverArray: ServerResponse[]) => {
-        servers.value = serverArray.map(server => ({ ...server, channels: [], channelsLoaded: false }))
+        servers.value = serverArray.map(server => ({
+            ...server,
+            channels: [],
+            channelsLoaded: false,
+            members: [],
+            membersLoaded: false
+        }))
 
         if (servers.value.length === 0) {
             setCurrentServer(null)
@@ -45,14 +58,20 @@ export const useServerStore = defineStore('server', () => {
         }
 
         const lastServerId = sessionStorage.getItem(sessionStorageKey) || servers.value[0].id
-        setCurrentServer(lastServerId)
+        const lastServer = getServer(lastServerId)
+        if (lastServer) {
+            setCurrentServer(lastServer.id)
+        } else {
+            setCurrentServer(servers.value[0].id)
+            console.log(servers.value[0].id)
+        }
 
         const channelStore = useChannelStore()
         await channelStore.loadChannels(lastServerId)
     }
 
     const addServer = (server: ServerResponse) => {
-        servers.value.push({ ...server, channels: [], channelsLoaded: false })
+        servers.value.push({ ...server, channels: [], channelsLoaded: false, members: [], membersLoaded: false })
         setCurrentServer(server.id)
     }
 
@@ -63,8 +82,21 @@ export const useServerStore = defineStore('server', () => {
         }
     }
 
+    const removeChannelFromServer = (serverId: string, channelId: string) => {
+        const server = getServer(serverId)
+        if (server) {
+            server.channels = server.channels.filter(c => c.id !== channelId)
+        }
+    }
+
+    const getServer = (serverId: string) => {
+        return servers.value.find(s => s.id === serverId) || null
+    }
+
     const setCurrentServer = async (serverId: string | null) => {
         const channelStore = useChannelStore()
+        const memberStore = useMemberStore()
+
         currentServerId.value = serverId
 
         if (!serverId) {
@@ -73,11 +105,16 @@ export const useServerStore = defineStore('server', () => {
         }
 
         sessionStorage.setItem('lastServerId', serverId)
-        const server = servers.value.find(s => s.id === serverId)
+        const server = getServer(serverId)
+
         if (!server) return
 
-        if (server.channels.length === 0) {
+        if (!server.channelsLoaded) {
             await channelStore.loadChannels(serverId)
+        }
+
+        if (!server.membersLoaded) {
+            await memberStore.loadMembers(serverId)
         }
 
         // Attempt to restore the last TEXT channel
@@ -146,22 +183,18 @@ export const useServerStore = defineStore('server', () => {
         return { error }
     }
 
-    const removeChannelFromServer = (serverId: string, channelId: string) => {
-        const server = servers.value.find(s => s.id === serverId)
-        if (server) {
-            server.channels = server.channels.filter(c => c.id !== channelId)
-        }
-    }
 
     return {
         servers,
         currentServerId,
         currentServer,
         areChannelsLoaded,
+        areMembersLoaded,
         setServerChannels,
         addChannelToServer,
         setServers,
         addServer,
+        getServer,
         removeServer,
         setCurrentServer,
         loadServers,

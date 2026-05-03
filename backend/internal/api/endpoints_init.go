@@ -22,12 +22,16 @@ func (cfg *ApiConfig) registerServerRoutes(mux *http.ServeMux) {
 
 	// Protected
 	getServers := http.HandlerFunc(cfg.GetServersHandler)
+	getServerMembers := http.HandlerFunc(cfg.GetServerMembersHandler)
 	createServer := http.HandlerFunc(cfg.CreateServerHandler)
 	joinServer := http.HandlerFunc(cfg.JoinServerHandler)
 
 	mux.Handle(newEndpoint("GET", "/servers"), cfg.RequireAuth(getServers))
 	mux.Handle(newEndpoint("POST", "/servers"), cfg.RequireAuth(createServer))
 	mux.Handle(newEndpoint("POST", "/servers/join"), cfg.RequireAuth(joinServer))
+
+	// Membership required
+	mux.Handle(newEndpoint("GET", "/servers/{server_id}/members"), cfg.RequireAuth(cfg.ServerMembershipMiddleware(getServerMembers)))
 
 	//TODO: invite code based join
 	//mux.Handle(newEndpoint("POST", "/servers/join/{invite_code}"), cfg.RequireAuth(joinServerByInviteCode))

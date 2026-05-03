@@ -6,11 +6,11 @@ CREATE TABLE users(
     email varchar(255) NOT NULL,
     avatar_url varchar(255),
     status varchar(20) DEFAULT 'offline'::character varying,
+    description varchar(255),
     password_hash varchar(255) NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     deleted_at timestamp with time zone,
-    description varchar(255),
     PRIMARY KEY(id)
 );
 CREATE UNIQUE INDEX users_username_key ON public.users USING btree (username);

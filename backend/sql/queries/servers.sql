@@ -30,3 +30,8 @@ SELECT * FROM servers WHERE is_public = true;
 
 -- name: GetServerById :one
 SELECT * FROM servers WHERE id = $1;
+
+-- name: GetServerMembers :many
+SELECT * FROM users
+INNER JOIN server_members ON server_members.user_id = users.id
+WHERE server_members.server_id = $1;

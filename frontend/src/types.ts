@@ -1,6 +1,19 @@
-export interface Server { id: string; name: string; avatar?: string }
-export interface Channel { id: string; name: string; type: 0 | 1 | 2, position: number }
-export interface Message { id: string; author: string; content: string }
+import type { UUID } from "crypto";
+
+export interface Server { id: UUID; name: string; avatar?: string }
+export interface Channel { id: UUID; name: string; type: 0 | 1 | 2, position: number }
+export interface Message { id: UUID; author: string; content: string }
+
+export type Status = 'online' | 'offline' | 'idle' | 'dnd'
+export type ChipColor = 'primary' | 'neutral' | 'warning' | 'error'
+
+export const statusColorMap: Record<Status, ChipColor> = {
+    online: 'primary',
+    offline: 'neutral',
+    idle: 'warning',
+    dnd: 'error',
+}
+
 
 export type LoginRequest = {
     username: string,
@@ -8,10 +21,10 @@ export type LoginRequest = {
 }
 
 export type LoginResponse = {
-    id: string,
+    id: UUID,
     username: string,
     email: string,
-    status: string,
+    status: Status,
     avatar_url?: string,
     description?: string,
 }
@@ -23,7 +36,7 @@ export type RegisterRequest = {
 }
 
 export type RegisterResponse = {
-    id: string,
+    id: UUID,
     username: string,
     email: string,
     created_at: string,
@@ -41,9 +54,9 @@ export type ServerRequest = {
 }
 
 export type ServerResponse = {
-    id: string,
+    id: UUID,
     name: string,
-    owner_id: string,
+    owner_id: UUID,
     description?: string,
     is_public: boolean,
     icon_url?: string,
@@ -64,9 +77,17 @@ export type ChannelRequest = {
 }
 
 export type ChannelResponse = {
-    id: string,
-    server_id: string,
+    id: UUID,
+    server_id: UUID,
     name: string,
     type: 0 | 1 | 2, // 0 = text, 1 = voice, 2 = category
     position: number,
+}
+
+export type MemberResponse = {
+    id: UUID,
+    username: string,
+    status: Status,
+    avatar_url?: string,
+    description?: string,
 }
