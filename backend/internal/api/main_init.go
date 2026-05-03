@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/logger"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/sql/schema"
@@ -24,10 +25,10 @@ import (
 )
 
 func (cfg *ApiConfig) RegisterRoutes(mux *http.ServeMux) {
-    cfg.registerSystemRoutes(mux)
-    cfg.registerAuthRoutes(mux)
-    cfg.registerServerRoutes(mux)
-    cfg.registerChannelRoutes(mux)
+	cfg.registerSystemRoutes(mux)
+	cfg.registerAuthRoutes(mux)
+	cfg.registerServerRoutes(mux)
+	cfg.registerChannelRoutes(mux)
 }
 
 func (cfg *ApiConfig) LoadEnvs() error {
@@ -46,7 +47,8 @@ func (cfg *ApiConfig) LoadEnvs() error {
 
 	requiredEnvs := []string{
 		"BACKEND_HTTP_PORT", "BACKEND_QUIC_PORT", "BACKEND_LISTEN_ADDR",
-		"BACKEND_JWT_SECRET", "BACKEND_DATABASE_URL",
+		"BACKEND_JWT_SECRET", "BACKEND_DATABASE_URL", "BACKEND_VALKEY_HOST",
+		"BACKEND_VALKEY_PORT",
 	}
 
 	for _, envKey := range requiredEnvs {
@@ -68,7 +70,6 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	listenAddr := os.Getenv("BACKEND_LISTEN_ADDR")
 	jwtSecret := os.Getenv("BACKEND_JWT_SECRET")
 	dbUrl := os.Getenv("BACKEND_DATABASE_URL")
-
 	httpPortInt, _ := strconv.ParseInt(httpPort, 10, 64)
 	quicPortInt, _ := strconv.ParseInt(quicPort, 10, 64)
 
@@ -77,6 +78,7 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	cfg.Platform = platform
 	cfg.DbUrl = dbUrl
 	cfg.FullAddress = fmt.Sprintf("%v:%v", listenAddr, httpPort)
+	cfg.FullAddressQuic = fmt.Sprintf("%v:%v", listenAddr, quicPort)
 	cfg.JwtSecret = jwtSecret
 
 	return nil
@@ -140,6 +142,28 @@ func (cfg *ApiConfig) InitializeLogger() {
 			return a
 		},
 	}))
+}
+
+func (cfg *ApiConfig) InitializeValkey() error {
+	host := os.Getenv("BACKEND_VALKEY_HOST")
+	port := os.Getenv("BACKEND_VALKEY_PORT")
+
+	addr := fmt.Sprintf("%s:%s", host, port)
+
+	client := redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: "",
+		DB:       0,
+	})
+
+	// Test the connection
+	if err := client.Ping(context.Background()).Err(); err != nil {
+		return fmt.Errorf("failed to connect to valkey: %w", err)
+	}
+	log.Default().Printf("connected to valkey: %v", client.NodeAddress())
+
+	cfg.Valkey = client
+	return nil
 }
 
 // Returns a string in the format "METHOD /api/VERSION/path"

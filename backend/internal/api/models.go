@@ -6,21 +6,26 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/quic-go/webtransport-go"
+	"github.com/redis/go-redis/v9"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/database"
 	"github.com/szidorpatrik/rift-chat/backend/rift-chat-api/internal/logger"
 )
 
 type ApiConfig struct {
-	HttpPort    int32
-	QuicPort    int32
-	Platform    string
-	DbUrl       string
-	DbQueries   *database.Queries
-	DB          *sql.DB
-	FullAddress string
-	JwtSecret   string
-	Logger      *slog.Logger
-	LogBatcher  *logger.LogBatcher
+	HttpPort        int32
+	QuicPort        int32
+	Platform        string
+	DbUrl           string
+	DbQueries       *database.Queries
+	DB              *sql.DB
+	FullAddress     string
+	FullAddressQuic string
+	JwtSecret       string
+	Logger          *slog.Logger
+	LogBatcher      *logger.LogBatcher
+	WTServer        *webtransport.Server
+	Valkey          *redis.Client
 }
 
 type RespondError struct {

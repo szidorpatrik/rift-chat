@@ -77,7 +77,7 @@ POSTGRES_SSLMODE="disable"
 
 # --- Backend ---
 BACKEND_HTTP_PORT="8081"
-BACKEND_QUIC_PORT="4242"
+BACKEND_QUIC_PORT="8443"
 BACKEND_PLATFORM="prod"
 BACKEND_LISTEN_ADDR="0.0.0.0"
 # Generate a random key with `openssl rand -base64 64` and paste it below.

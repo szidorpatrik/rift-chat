@@ -4,6 +4,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import { fileURLToPath } from 'url'
 import tailwindcss from '@tailwindcss/vite'
 import ui from '@nuxt/ui/vite'
+import fs from 'node:fs'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -34,7 +35,16 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: "0.0.0.0",
-      port: parseInt(env.FRONTEND_PORT || '8080'),
+      port: 8443,
+      https: {
+        key: fs.readFileSync('../backend/certs/dev/key.pem'),
+        cert: fs.readFileSync('../backend/certs/dev/cert.pem'),
+      },
+      hmr: {
+        protocol: 'wss',
+        host: 'localhost',
+        port: 8443,
+      },
       proxy: {
         '/api': {
           target: 'http://localhost:8081',

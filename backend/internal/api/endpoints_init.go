@@ -4,6 +4,9 @@ import "net/http"
 
 func (cfg *ApiConfig) registerSystemRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /healthz", cfg.HealthzHandler)
+
+	wtHandler := http.HandlerFunc(cfg.WebTransportHandler)
+	mux.Handle("/wt", cfg.RequireAuth(wtHandler))
 }
 
 func (cfg *ApiConfig) registerAuthRoutes(mux *http.ServeMux) {

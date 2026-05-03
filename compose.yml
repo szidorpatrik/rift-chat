@@ -34,9 +34,11 @@ services:
       - BACKEND_LISTEN_ADDR=${BACKEND_LISTEN_ADDR}
       - BACKEND_JWT_SECRET=${BACKEND_JWT_SECRET}
       - BACKEND_DATABASE_URL=${BACKEND_DATABASE_URL}
-    #ports:
+    ports:
     #  - "${BACKEND_HTTP_PORT}:${BACKEND_HTTP_PORT}"
-    #  - "${BACKEND_QUIC_PORT}:${BACKEND_QUIC_PORT}/udp"
+      - "${BACKEND_QUIC_PORT}:${BACKEND_QUIC_PORT}/udp"
+    volumes:
+      - ./backend/certs:/root/certs:ro
     depends_on:
       db:
         condition: service_healthy
@@ -78,7 +80,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - './caddy/Caddyfile:/etc/caddy/Caddyfile'
+      - './backend/certs:/etc/caddy/certs:ro'
       - caddy_data:/data
       - caddy_config:/config
     networks:
@@ -89,9 +92,26 @@ services:
       backend:
         condition: service_healthy
 
+  valkey:
+    image: valkey/valkey:latest
+    container_name: ${VALKEY_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_VALKEY_PORT}:6379"
+    volumes:
+      - valkey_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - riftchat_network
+
 volumes:
   caddy_data:
   caddy_config:
+  valkey_data:
 
 networks:
   riftchat_network:
