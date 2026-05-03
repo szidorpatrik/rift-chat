@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Channel, type Message } from '@types'
+import { type Message } from '@types'
 import { onMounted, ref } from 'vue'
 import { useAuthStore } from '@stores/authStore'
 import ServerSidebar from '@components/ServerSidebar.vue'

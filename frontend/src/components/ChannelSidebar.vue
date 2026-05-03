@@ -82,7 +82,7 @@ const getIcon = (type: 0 | 1 | 2) => {
 </script>
 
 <template>
-    <div class="select-none flex flex-1 flex-col w-64 justify-between overflow-hidden rounded-lg">
+    <div class="select-none flex flex-1 flex-col w-56 justify-between overflow-hidden rounded-lg">
         <!-- Server Context Menu -->
         <UContextMenu :items="serverHeaderActions">
             <div class="flex mb-1">
@@ -147,6 +147,5 @@ const getIcon = (type: 0 | 1 | 2) => {
                 </template>
             </UModal>
         </div>
-
     </div>
 </template>

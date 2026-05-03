@@ -21,13 +21,13 @@ const servers = computed<RadioGroupItem[]>(() =>
     serverStore.servers.map(s => ({
         label: s.name[0].toUpperCase(),
         value: s.id,
-        class: 'size-14 mb-2 cursor-pointer flex items-center justify-center font-semibold text-white',
+        class: 'size-12 mb-2 cursor-pointer flex items-center justify-center font-semibold text-white',
     }))
 )
 </script>
 
 <template>
-    <div class="select-none overflow-y-auto w-14 shrink-0 flex flex-col items-center rounded-lg p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div class="select-none overflow-y-auto w-12 shrink-0 flex flex-col items-center rounded-lg p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <template v-if="serverStore.servers.length > 0">
             <URadioGroup v-model="selectedServerId"
                          :items="servers"

@@ -93,6 +93,7 @@ export const useChannelStore = defineStore('channel', () => {
 
         if (data) {
             serverStore.addChannelToServer(data.server_id, data)
+            setCurrentChannel(data.server_id, data.id)
             toast.add({ title: 'Channel created', description: `Channel "${payload.name}" has been created.`, color: 'success' })
             return true
         }
@@ -110,6 +111,8 @@ export const useChannelStore = defineStore('channel', () => {
         }
 
         serverStore.removeChannelFromServer(serverId, channelId)
+        const firstTextChannelId = serverStore.currentServer?.channels.find(c => c.type === 0)?.id
+        if (firstTextChannelId) setCurrentChannel(serverId, firstTextChannelId)
         toast.add({ title: 'Channel deleted', description: `Channel has been deleted.`, color: 'success' })
         return true
     }
