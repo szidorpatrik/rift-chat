@@ -75,6 +75,14 @@ BACKEND_KEY_NAME="key.pem"   # <- CHANGE THIS to your key file name
 #...
 ```
 
+Update [`Caddyfile`](caddy/Caddyfile) to match the certificate file names as well:
+
+```caddy
+(local_tls) {
+    tls /etc/caddy/certs/cert.pem /etc/caddy/certs/key.pem # <- CHANGE THIS to match your cert and key file names
+}
+```
+
 ### 4. Start the Application
 
 Run this command to build the Docker images, start the containers, and show the backend logs:

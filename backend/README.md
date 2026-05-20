@@ -93,6 +93,15 @@ FRONTEND_PORT="80"
 **File 2: `backend/.env-dev` (Used by Air / Native Go)**
 When you run the backend natively using `air`, Go cannot see the Docker internal network. This file overrides the platform and database host to point to `127.0.0.1` or `localhost` so Go can connect to the database exposed on your machine's port.
 
+**File 2: `caddy/Caddyfile`**
+Update [`Caddyfile`](caddy/Caddyfile) to match the certificate file names as well:
+
+```caddy
+(local_tls_dev) {
+    tls /etc/caddy/certs/dev/cert.pem /etc/caddy/certs/dev/key.pem # <- CHANGE THIS to match your cert and key file names
+}
+```
+
 ### 3. Start the Infrastructure
 
 Spin up PostgreSQL and Valkey in the background. You only need to run this once.
