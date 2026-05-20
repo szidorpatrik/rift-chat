@@ -77,9 +77,14 @@ BACKEND_KEY_NAME="key.pem"   # <- CHANGE THIS to your key file name
 
 ### 4. Start the Application
 
+Run this command to build the Docker images, start the containers, and show the backend logs:
+
 ```bash
-docker compose build && docker compose up -d --force-recreate
+docker compose build && docker compose up -d --force-recreate && docker compose logs -f backend
 ```
+
+If any environment variables are missing or misconfigured, the backend will log an error and exit.
+Fix the issues and restart the containers.
 
 ### 5. Access the Frontend
 

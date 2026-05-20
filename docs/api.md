@@ -10,7 +10,7 @@ This API uses **HTTP-Only Cookies** for session management.
 
 * **Access Token (`access_token`):** A short-lived JWT (1 hour) used to authorize requests to protected routes.
 * **Refresh Token (`refresh_token`):** A long-lived token (30 days) used to securely rotate the access token when it expires.
-* Both cookies are set with `HttpOnly`, `SameSite=Strict`, and conditionally `Secure` (based on the environment) flags.
+* Both cookies are set with `HttpOnly`, `SameSite=Strict`, and conditionally `Secure` flags.
 
 ---
 
@@ -24,7 +24,7 @@ Check the operational status of the server.
 * **Method:** `GET`
 * **Auth Required:** No
 
-**Response: `200 OK`**
+**Response: `200 OK`** (`text/plain; charset=utf-8`)
 
 ```text
 OK
@@ -34,13 +34,13 @@ OK
 
 ### WebTransport Stream
 
-Establishes a WebTransport session to stream real-time events via a one-way downlink.
+Establishes an upgraded WebTransport session to stream real-time events via a one-way server-to-client downlink. Subscribes the client session to a Valkey topic matching `user_events:{user_id}`.
 
 * **URL:** `/wt`
-* **Method:** `CONNECT` (WebTransport Protocol)
-* **Auth Required:** Optional (Unauthenticated connections receive a nil UUID for testing)
+* **Method:** `CONNECT` (WebTransport Protocol Upgrade)
+* **Auth Required:** Yes
 
-**Data Format:** Raw byte stream containing JSON payloads appended with newline characters (`\n`).
+**Data Format:** Raw byte stream containing JSON payloads with newline characters (`\n`) appended at the end of each message event.
 
 ---
 
@@ -48,7 +48,7 @@ Establishes a WebTransport session to stream real-time events via a one-way down
 
 ### Register User
 
-Creates a new user account.
+Creates a new user account. Sanitizes trailing/leading spaces on the username and email inputs before execution.
 
 * **URL:** `/api/v1/users`
 * **Method:** `POST`
@@ -64,7 +64,7 @@ Creates a new user account.
 }
 ```
 
-**Response: `201 Created`**
+**Response: `201 Created`** (`application/json`)
 
 ```json
 {
@@ -80,7 +80,7 @@ Creates a new user account.
 
 ### Login
 
-Authenticates a user and initiates a session via cookies. Sets `Set-Cookie` headers for `access_token` and `refresh_token`.
+Authenticates a user and initiates a session via cookies. Sets `Set-Cookie` headers for `access_token` and `refresh_token`. Includes an anti-timing attack mechanism if a non-existent user profile is requested.
 
 * **URL:** `/api/v1/login`
 * **Method:** `POST`
@@ -95,14 +95,16 @@ Authenticates a user and initiates a session via cookies. Sets `Set-Cookie` head
 }
 ```
 
-**Response: `200 OK`**
+**Response: `200 OK`** (`application/json`)
 
 ```json
 {
   "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
   "username": "test_user",
   "email": "user@example.com",
-  "status": "online"
+  "status": "online",
+  "avatar_url": "[https://cdn.example.com/avatars/user.png](https://cdn.example.com/avatars/user.png)",
+  "description": "An engineer working on Rift Chat"
 }
 ```
 
@@ -110,20 +112,22 @@ Authenticates a user and initiates a session via cookies. Sets `Set-Cookie` head
 
 ### Session Check
 
-Verifies the user's active session and returns their profile.
+Verifies the user's active session state using their context credentials and returns their fresh database profile.
 
 * **URL:** `/api/v1/session`
 * **Method:** `GET`
 * **Auth Required:** Yes
 
-**Response: `200 OK`**
+**Response: `200 OK`** (`application/json`)
 
 ```json
 {
   "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
   "username": "test_user",
   "email": "user@example.com",
-  "status": "online"
+  "status": "online",
+  "avatar_url": "[https://cdn.example.com/avatars/user.png](https://cdn.example.com/avatars/user.png)",
+  "description": "An engineer working on Rift Chat"
 }
 ```
 
@@ -131,7 +135,7 @@ Verifies the user's active session and returns their profile.
 
 ### Refresh Tokens
 
-Rotates the session tokens. Sets new `Set-Cookie` headers.
+Rotates old session tokens inside a single database transaction context. Revokes the utilized refresh token and appends two new `Set-Cookie` headers to the network response.
 
 * **URL:** `/api/v1/refresh`
 * **Method:** `POST`
@@ -143,11 +147,11 @@ Rotates the session tokens. Sets new `Set-Cookie` headers.
 
 ### Revoke Tokens (Logout)
 
-Ends the user's session and clears client cookies instantly.
+Ends the user's session by revoking the client's current refresh token within the database and instantly purging all authorization cookies from the user client.
 
 * **URL:** `/api/v1/revoke`
 * **Method:** `POST`
-* **Auth Required:** No strict auth, expects `refresh_token` cookie
+* **Auth Required:** No strict access auth (expects `refresh_token` cookie value)
 
 **Response: `204 No Content`**
 
@@ -157,20 +161,26 @@ Ends the user's session and clears client cookies instantly.
 
 ### Get Public Servers
 
-Retrieves a list of all public servers.
+Retrieves an array of all servers set to public accessibility in the system.
 
 * **URL:** `/api/v1/servers/public`
 * **Method:** `GET`
 * **Auth Required:** No
 
-**Response: `200 OK`**
+**Response: `200 OK`** (`application/json`)
 
 ```json
 [
   {
     "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
-    "name": "Public Server",
-    "is_public": true
+    "owner_id": "018f3a1b-2c3d-4e5f-8a9b-111111111111",
+    "name": "Public Lounge",
+    "icon_url": "[https://cdn.example.com/icons/server.png](https://cdn.example.com/icons/server.png)",
+    "background_url": "[https://cdn.example.com/bg/server.jpg](https://cdn.example.com/bg/server.jpg)",
+    "is_public": true,
+    "description": "A place for global developer discussions.",
+    "created_at": "2026-05-20T19:40:00Z",
+    "updated_at": "2026-05-20T19:40:00Z"
   }
 ]
 ```
@@ -179,22 +189,26 @@ Retrieves a list of all public servers.
 
 ### Get User Servers
 
-Retrieves servers the authenticated user is a member of.
+Retrieves an array of all servers the currently authenticated context user is an active member of.
 
 * **URL:** `/api/v1/servers`
 * **Method:** `GET`
 * **Auth Required:** Yes
 
-**Response: `200 OK`**
+**Response: `200 OK`** (`application/json`)
 
 ```json
 [
   {
     "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
     "owner_id": "018f3a1b-2c3d-4e5f-8a9b-111111111111",
-    "name": "My Server",
+    "name": "My Workspace",
+    "icon_url": "",
+    "background_url": "",
     "is_public": false,
-    "description": "A private server"
+    "description": "A completely private server",
+    "created_at": "2026-05-20T19:40:00Z",
+    "updated_at": "2026-05-20T19:40:00Z"
   }
 ]
 ```
@@ -203,7 +217,7 @@ Retrieves servers the authenticated user is a member of.
 
 ### Create Server
 
-Creates a server and automatically joins the creator as owner.
+Creates a server configuration and executes an internal atomized transaction to immediately join the creator as its owner. Inputs are stripped of trailing whitespaces during sanitization validation phases.
 
 * **URL:** `/api/v1/servers`
 * **Method:** `POST`
@@ -219,13 +233,27 @@ Creates a server and automatically joins the creator as owner.
 }
 ```
 
-**Response: `201 Created`**
+**Response: `201 Created`** (`application/json`)
+
+```json
+{
+  "id": "018f3a1b-2c3d-4e5f-8a9b-333333333333",
+  "owner_id": "018f3a1b-2c3d-4e5f-8a9b-111111111111",
+  "name": "New Public Server",
+  "icon_url": "",
+  "background_url": "",
+  "is_public": true,
+  "description": "A place to chat.",
+  "created_at": "2026-05-20T21:40:00Z",
+  "updated_at": "2026-05-20T21:40:00Z"
+}
+```
 
 ---
 
 ### Join Server
 
-Joins an existing public server.
+Joins an existing public server using its structural ID identifier. Returns a `409 Conflict` if membership relations already exist for this user node inside the target server.
 
 * **URL:** `/api/v1/servers/join`
 * **Method:** `POST`
@@ -239,26 +267,42 @@ Joins an existing public server.
 }
 ```
 
-**Response: `200 OK`**
+**Response: `200 OK`** (`application/json`)
+
+```json
+{
+  "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
+  "owner_id": "018f3a1b-2c3d-4e5f-8a9b-111111111111",
+  "name": "Public Lounge",
+  "icon_url": "[https://cdn.example.com/icons/server.png](https://cdn.example.com/icons/server.png)",
+  "background_url": "[https://cdn.example.com/bg/server.jpg](https://cdn.example.com/bg/server.jpg)",
+  "is_public": true,
+  "description": "A place for global developer discussions.",
+  "created_at": "2026-05-20T19:40:00Z",
+  "updated_at": "2026-05-20T19:40:00Z"
+}
+```
 
 ---
 
 ### Get Server Members
 
-Retrieves the list of members for a specific server.
+Retrieves the structural list of profile objects representing members joined to the targeted server reference.
 
 * **URL:** `/api/v1/servers/{server_id}/members`
 * **Method:** `GET`
-* **Auth Required:** Yes (Requires server membership)
+* **Auth Required:** Yes (Requires server membership context validation)
 
-**Response: `200 OK`**
+**Response: `200 OK`** (`application/json`)
 
 ```json
 [
   {
     "id": "018f3a1b-2c3d-4e5f-8a9b-111111111111",
     "username": "test_user",
-    "status": "online"
+    "status": "online",
+    "avatar_url": "[https://cdn.example.com/avatars/user.png](https://cdn.example.com/avatars/user.png)",
+    "description": "An engineer working on Rift Chat"
   }
 ]
 ```
@@ -269,13 +313,13 @@ Retrieves the list of members for a specific server.
 
 ### Get Server Channels
 
-Retrieves all channels associated with a specific server.
+Retrieves all text, voice, or category channels linked directly with the specific server resource.
 
 * **URL:** `/api/v1/servers/{server_id}/channels`
 * **Method:** `GET`
-* **Auth Required:** Yes (Requires server membership)
+* **Auth Required:** Yes (Requires server membership context validation)
 
-**Response: `200 OK`**
+**Response: `200 OK`** (`application/json`)
 
 ```json
 [
@@ -293,11 +337,15 @@ Retrieves all channels associated with a specific server.
 
 ### Create Channel
 
-Creates a new channel within a server. Channel types: `0` (text), `1` (voice), `2` (category). Text channels format names to lowercase and replace spaces with hyphens.
+Creates a new channel layout inside a targeted server framework.
 
+**Validation Mapping Rules:**
+
+* Valid channel types are: `0` (text), `1` (voice), `2` (category).
+* **Type `0` (Text) Transformation Rule:** When creating a text channel, all inner whitespace segments are converted to standard hyphens (`-`), and the channel name string is transformed into full lowercasing automatically.
 * **URL:** `/api/v1/servers/{server_id}/channels`
 * **Method:** `POST`
-* **Auth Required:** Yes (Requires server membership)
+* **Auth Required:** Yes (Requires server membership context validation)
 
 **Request Body** (`application/json`)
 
@@ -309,16 +357,26 @@ Creates a new channel within a server. Channel types: `0` (text), `1` (voice), `
 }
 ```
 
-**Response: `201 Created`**
+**Response: `201 Created`** (`application/json`)
+
+```json
+{
+  "id": "018f3a1b-2c3d-4e5f-8a9b-222222222222",
+  "server_id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
+  "name": "general-chat",
+  "type": 0,
+  "position": 1
+}
+```
 
 ---
 
 ### Delete Channel
 
-Deletes a specific channel by ID.
+Deletes a specific channel by its unique identifier tracking parameter.
 
 * **URL:** `/api/v1/servers/{server_id}/channels/{channel_id}`
 * **Method:** `DELETE`
-* **Auth Required:** Yes (Requires server membership)
+* **Auth Required:** Yes (Requires server membership context validation)
 
 **Response: `204 No Content`**

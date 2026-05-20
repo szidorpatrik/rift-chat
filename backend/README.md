@@ -146,16 +146,36 @@ All WEBTRANSPORT endpoints are prefixed with `/wt`.
 
 For complete documentation regarding request/response shapes, headers, and status codes, please refer to the [API Documentation](../docs/api.md) file.
 
-**Core Routes:**
+## Core Routes
+
+### System & Infrastructure
 
 * `GET  /healthz` - System health check
+* `CONNECT /wt` - WebTransport data streaming connection endpoint
+
+### Authentication & User Management
+
 * `POST /api/v1/users` - Register a new account
 * `POST /api/v1/login` - Authenticate and receive HTTP-Only session cookies
-* `GET  /api/v1/session` - Restore session state (Requires Auth)
+* `GET  /api/v1/session` - Restore session state *(Requires Auth)*
 * `POST /api/v1/refresh` - Rotate expired access tokens
 * `POST /api/v1/revoke` - Revoke tokens and log out
 
-## Database Changes (sqlc)
+### Server Management
+
+* `GET  /api/v1/servers/public` - Retrieve a list of globally discoverable public servers
+* `GET  /api/v1/servers` - Retrieve a list of servers the authenticated user is a member of *(Requires Auth)*
+* `POST /api/v1/servers` - Create a new server instance *(Requires Auth)*
+* `POST /api/v1/servers/join` - Join an existing server *(Requires Auth)*
+* `GET  /api/v1/servers/{server_id}/members` - Retrieve the member roster for a specific server *(Requires Auth + Server Membership)*
+
+### Channel Management
+
+* `GET  /api/v1/servers/{server_id}/channels` - Retrieve all text/voice channels within a specific server *(Requires Auth + Server Membership)*
+* `POST /api/v1/servers/{server_id}/channels` - Create a new channel within a specific server *(Requires Auth + Server Membership)*
+* `DELETE /api/v1/servers/{server_id}/channels/{channel_id}` - Delete a specific channel from a server *(Requires Auth + Server Membership)*
+
+### Database Changes (sqlc)
 
 When you need to modify the database schema or add new queries:
 
