@@ -119,12 +119,24 @@ docker compose exec db psql -U riftchat_user -d riftchat_db -c "CREATE USER rift
 ### 4. Run the API
 
 Start the Go server using Air. It will automatically recompile and restart whenever you save a Go file.
+You have to be in the `backend` directory to run this command since it relies on the `./backend/.env-dev` file.
 
 ```bash
-air
+cd backend && air
 ```
 
 The API will now be listening on `http://0.0.0.0:8081`.
+The Webtransport endpoint will be listening on `https://0.0.0.0:8443` with the TLS certificates you provided.
+
+### 5. Run the Frontend
+
+In a separate terminal, start the frontend with bun. You have to be in the `frontend` directory to run this command:
+
+```bash
+cd frontend && bun run dev
+```
+
+Access the frontend at `http://localhost:8080`.
 
 ## Project Structure
 
