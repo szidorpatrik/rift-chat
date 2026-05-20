@@ -42,8 +42,12 @@ git clone https://github.com/szidorpatrik/rift-chat.git && cd rift-chat
 
 ### 2. Environment Configuration
 
+Create the necessary environment files and directories:
+
 ```bash
 cp .env-example .env
+mkdir -p ./backend/certs
+mkdir -p ./postgres/data
 ```
 
 Look inside `.env` and update the variables as needed. The most important one to change is `BACKEND_JWT_SECRET` and `POSTGRES_PASSWORD` for security reasons. You can generate a random JWT secret with the following command:
@@ -60,19 +64,30 @@ BACKEND_JWT_SECRET=""
 #...
 ```
 
-### 3. Start the Application
+Copy your TLS certificates into the `./backend/certs` directory.
+
+Update `.env` with the certificate file names like this:
+
+```env
+#...
+BACKEND_CERT_NAME="cert.pem" # <- CHANGE THIS to your cert file name
+BACKEND_KEY_NAME="key.pem"   # <- CHANGE THIS to your key file name
+#...
+```
+
+### 4. Start the Application
 
 ```bash
 docker compose build && docker compose up -d --force-recreate
 ```
 
-### 4. Access the Frontend
+### 5. Access the Frontend
 
-Open your browser and navigate to `http://localhost:80/` or `http://127.0.0.1:80/` to see the frontend.
+Open your browser and navigate to `https://localhost/` to see the frontend.
 
 ### Production Deployment
 
-When deploying to production, remove all the ports from [compose.yml](docker-compose.yml) except for caddy and set the appropriate environment variables in `.env` to allow the backend to listen on `
+When deploying to production, remove all the ports from [compose.yml](docker-compose.yml) except for caddy and set the appropriate environment variables in `.env` to allow the backend to listen on
 
 ## Local Development
 

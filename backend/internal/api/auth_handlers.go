@@ -87,7 +87,8 @@ func (cfg *ApiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err == sql.ErrNoRows {
 		// Against timing attacks
 		auth.HashPassword("just a silly time waster")
-		cfg.handleAuthError(w, r, http.StatusUnauthorized, "user not found", fmt.Errorf("incorrect username or password"), EventLoginFailed, false, true, "username", req.Username)
+		cfg.LogWarn(r, "user not found", uuid.Nil, EventLoginFailed, "username", req.Username)
+		RespondWithError(w, http.StatusUnauthorized, "incorrect username or password")
 		return
 	} else if err != nil {
 		cfg.handleAuthError(w, r, http.StatusInternalServerError, "database error fetching user during login", err, EventDbError, true, false, "username", req.Username)
@@ -99,7 +100,8 @@ func (cfg *ApiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		cfg.handleAuthError(w, r, http.StatusUnauthorized, "password hash comparison error", err, EventLoginFailed, true, false, "user_id", user.ID)
 		return
 	} else if !matching {
-		cfg.handleAuthError(w, r, http.StatusUnauthorized, "incorrect password", fmt.Errorf("incorrect username or password"), EventLoginFailed, false, true, "user_id", user.ID)
+		cfg.LogWarn(r, "incorrect password", uuid.Nil, EventLoginFailed, "username", req.Username)
+		RespondWithError(w, http.StatusUnauthorized, "incorrect username or password")
 		return
 	}
 

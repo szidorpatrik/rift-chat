@@ -29,6 +29,7 @@ func (cfg *ApiConfig) RegisterRoutes(mux *http.ServeMux) {
 	cfg.registerAuthRoutes(mux)
 	cfg.registerServerRoutes(mux)
 	cfg.registerChannelRoutes(mux)
+	cfg.registerWebtransportRoutes(mux)
 }
 
 func (cfg *ApiConfig) LoadEnvs() error {
@@ -37,9 +38,13 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	switch platform {
 	case "", "dev", "development":
 		envFile := ".env-dev"
+		cfg.CertPath = "./certs/dev"
+		cfg.KeyPath = "./certs/dev"
 		log.Default().Printf("=== RUNNING IN DEVELOPMENT MODE, LOADING '%s' ===\n", envFile)
 		godotenv.Overload(envFile)
 	case "prod", "production":
+		cfg.CertPath = "./certs"
+		cfg.KeyPath = "./certs"
 		log.Default().Println("=== RUNNING IN PRODUCTION MODE ===")
 	default:
 		return fmt.Errorf("=== UNKNOWN BACKEND_PLATFORM '%s': Check './backend/.env' if running locally or './.env' if running via docker compose ===\n", platform)
@@ -48,7 +53,7 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	requiredEnvs := []string{
 		"BACKEND_HTTP_PORT", "BACKEND_QUIC_PORT", "BACKEND_LISTEN_ADDR",
 		"BACKEND_JWT_SECRET", "BACKEND_DATABASE_URL", "BACKEND_VALKEY_HOST",
-		"BACKEND_VALKEY_PORT",
+		"BACKEND_VALKEY_PORT", "BACKEND_CERT_NAME", "BACKEND_KEY_NAME",
 	}
 
 	for _, envKey := range requiredEnvs {
@@ -80,7 +85,8 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	cfg.FullAddress = fmt.Sprintf("%v:%v", listenAddr, httpPort)
 	cfg.FullAddressQuic = fmt.Sprintf("%v:%v", listenAddr, quicPort)
 	cfg.JwtSecret = jwtSecret
-
+	cfg.CertPath = fmt.Sprintf("%s/%s", cfg.CertPath, os.Getenv("BACKEND_CERT_NAME"))
+	cfg.KeyPath = fmt.Sprintf("%s/%s", cfg.KeyPath, os.Getenv("BACKEND_KEY_NAME"))
 	return nil
 }
 

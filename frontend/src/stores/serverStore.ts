@@ -53,21 +53,19 @@ export const useServerStore = defineStore('server', () => {
         }))
 
         if (servers.value.length === 0) {
-            setCurrentServer(null)
+            await setCurrentServer(null)
             return
         }
 
         const lastServerId = sessionStorage.getItem(sessionStorageKey) || servers.value[0].id
         const lastServer = getServer(lastServerId)
+
         if (lastServer) {
-            setCurrentServer(lastServer.id)
+            await setCurrentServer(lastServer.id)
         } else {
-            setCurrentServer(servers.value[0].id)
+            await setCurrentServer(servers.value[0].id)
             console.log(servers.value[0].id)
         }
-
-        const channelStore = useChannelStore()
-        await channelStore.loadChannels(lastServerId)
     }
 
     const addServer = (server: ServerResponse) => {

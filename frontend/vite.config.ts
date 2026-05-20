@@ -1,13 +1,12 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { fileURLToPath } from 'url'
 import tailwindcss from '@tailwindcss/vite'
 import ui from '@nuxt/ui/vite'
-import fs from 'node:fs'
+//import fs from 'node:fs'
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
+export default defineConfig(() => {
 
   return {
     plugins: [
@@ -35,16 +34,11 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: "0.0.0.0",
-      port: 8443,
-      https: {
-        key: fs.readFileSync('../backend/certs/dev/key.pem'),
-        cert: fs.readFileSync('../backend/certs/dev/cert.pem'),
-      },
-      hmr: {
-        protocol: 'wss',
-        host: 'localhost',
-        port: 8443,
-      },
+      port: 8080,
+      // https: {
+      //   key: fs.readFileSync('../backend/certs/dev/key.pem'),
+      //   cert: fs.readFileSync('../backend/certs/dev/cert.pem'),
+      // },
       proxy: {
         '/api': {
           target: 'http://localhost:8081',

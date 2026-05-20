@@ -18,6 +18,7 @@ type statusRecorder struct {
 var publicEndpoints = []string{
 	"/favicon.ico",
 	"/healthz",
+	// "/wt",
 }
 
 // Blocks any request that does not have a valid user ID in its context.

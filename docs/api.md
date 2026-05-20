@@ -2,7 +2,7 @@
 
 ## Base URL
 
-All API endpoints (except the health check) are prefixed with `/api/v1`.
+All REST API endpoints (except the health check and WebTransport) are prefixed with `/api/v1`.
 
 ## Authentication Method
 
@@ -32,7 +32,19 @@ OK
 
 ---
 
-## User Endpoints
+### WebTransport Stream
+
+Establishes a WebTransport session to stream real-time events via a one-way downlink.
+
+* **URL:** `/wt`
+* **Method:** `CONNECT` (WebTransport Protocol)
+* **Auth Required:** Optional (Unauthenticated connections receive a nil UUID for testing)
+
+**Data Format:** Raw byte stream containing JSON payloads appended with newline characters (`\n`).
+
+---
+
+## User & Authentication Endpoints
 
 ### Register User
 
@@ -64,19 +76,11 @@ Creates a new user account.
 }
 ```
 
-**Error Responses**
-
-* `400 Bad Request`: Invalid JSON, missing fields, or failed validation (e.g., regex mismatch).
-* `409 Conflict`: Username or Email already exists.
-* `500 Internal Server Error`: Server failure.
-
 ---
-
-## Authentication Endpoints
 
 ### Login
 
-Authenticates a user and initiates a session via cookies.
+Authenticates a user and initiates a session via cookies. Sets `Set-Cookie` headers for `access_token` and `refresh_token`.
 
 * **URL:** `/api/v1/login`
 * **Method:** `POST`
@@ -92,89 +96,229 @@ Authenticates a user and initiates a session via cookies.
 ```
 
 **Response: `200 OK`**
-Returns basic user info. **Crucially, this endpoint sets `Set-Cookie` headers for `access_token` and `refresh_token`.**
 
 ```json
 {
   "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
   "username": "test_user",
-  "email": "user@example.com"
+  "email": "user@example.com",
+  "status": "online"
 }
 ```
-
-**Error Responses**
-
-* `400 Bad Request`: Invalid JSON body.
-* `401 Unauthorized`: Incorrect username or password.
-* `500 Internal Server Error`: Server failure.
 
 ---
 
 ### Session Check
 
-Verifies the user's active session and returns their profile. Primarily used by the frontend to restore state on page reloads.
+Verifies the user's active session and returns their profile.
 
 * **URL:** `/api/v1/session`
 * **Method:** `GET`
-* **Auth Required:** Yes (Requires valid `access_token` cookie)
-
-**Request Body**
-None.
+* **Auth Required:** Yes
 
 **Response: `200 OK`**
-Returns the same basic user info as the Login endpoint.
 
 ```json
 {
   "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
   "username": "test_user",
-  "email": "user@example.com"
+  "email": "user@example.com",
+  "status": "online"
 }
 ```
-
-**Error Responses**
-
-* `401 Unauthorized`: Missing, invalid, or expired `access_token` cookie.
-* `404 Not Found`: Token is valid, but the user no longer exists in the database.
-* `500 Internal Server Error`: Server failure during database lookup.
 
 ---
 
 ### Refresh Tokens
 
-Rotates the session tokens. The frontend should call this when the access token expires.
+Rotates the session tokens. Sets new `Set-Cookie` headers.
 
 * **URL:** `/api/v1/refresh`
 * **Method:** `POST`
-* **Auth Required:** Requires a valid `refresh_token` cookie.
-
-**Request Body**
-None.
+* **Auth Required:** Requires valid `refresh_token` cookie
 
 **Response: `204 No Content`**
-Returns no body. **This endpoint sets new `Set-Cookie` headers, rotating both the `access_token` and the `refresh_token`.**
-
-**Error Responses**
-
-* `401 Unauthorized`: Missing `refresh_token` cookie, or the token is invalid/revoked.
-* `500 Internal Server Error`: Server failure during rotation.
 
 ---
 
 ### Revoke Tokens (Logout)
 
-Ends the user's session, revokes the refresh token in the database, and clears the client's cookies.
+Ends the user's session and clears client cookies instantly.
 
 * **URL:** `/api/v1/revoke`
 * **Method:** `POST`
-* **Auth Required:** No strict authentication required, but expects a valid `refresh_token` cookie to identify the session to revoke.
-
-**Request Body**
-None.
+* **Auth Required:** No strict auth, expects `refresh_token` cookie
 
 **Response: `204 No Content`**
-Returns no body. **This endpoint sends `Set-Cookie` headers with `MaxAge: -1` to instantly delete the `access_token` and `refresh_token` cookies on the client.**
 
-**Error Responses**
+---
 
-* `500 Internal Server Error`: Server failure while interacting with the database. (Note: Cookies are still cleared even if the database revocation fails).
+## Server Endpoints
+
+### Get Public Servers
+
+Retrieves a list of all public servers.
+
+* **URL:** `/api/v1/servers/public`
+* **Method:** `GET`
+* **Auth Required:** No
+
+**Response: `200 OK`**
+
+```json
+[
+  {
+    "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
+    "name": "Public Server",
+    "is_public": true
+  }
+]
+```
+
+---
+
+### Get User Servers
+
+Retrieves servers the authenticated user is a member of.
+
+* **URL:** `/api/v1/servers`
+* **Method:** `GET`
+* **Auth Required:** Yes
+
+**Response: `200 OK`**
+
+```json
+[
+  {
+    "id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
+    "owner_id": "018f3a1b-2c3d-4e5f-8a9b-111111111111",
+    "name": "My Server",
+    "is_public": false,
+    "description": "A private server"
+  }
+]
+```
+
+---
+
+### Create Server
+
+Creates a server and automatically joins the creator as owner.
+
+* **URL:** `/api/v1/servers`
+* **Method:** `POST`
+* **Auth Required:** Yes
+
+**Request Body** (`application/json`)
+
+```json
+{
+  "name": "New Public Server",
+  "description": "A place to chat.",
+  "is_public": true
+}
+```
+
+**Response: `201 Created`**
+
+---
+
+### Join Server
+
+Joins an existing public server.
+
+* **URL:** `/api/v1/servers/join`
+* **Method:** `POST`
+* **Auth Required:** Yes
+
+**Request Body** (`application/json`)
+
+```json
+{
+  "server_id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b"
+}
+```
+
+**Response: `200 OK`**
+
+---
+
+### Get Server Members
+
+Retrieves the list of members for a specific server.
+
+* **URL:** `/api/v1/servers/{server_id}/members`
+* **Method:** `GET`
+* **Auth Required:** Yes (Requires server membership)
+
+**Response: `200 OK`**
+
+```json
+[
+  {
+    "id": "018f3a1b-2c3d-4e5f-8a9b-111111111111",
+    "username": "test_user",
+    "status": "online"
+  }
+]
+```
+
+---
+
+## Channel Endpoints
+
+### Get Server Channels
+
+Retrieves all channels associated with a specific server.
+
+* **URL:** `/api/v1/servers/{server_id}/channels`
+* **Method:** `GET`
+* **Auth Required:** Yes (Requires server membership)
+
+**Response: `200 OK`**
+
+```json
+[
+  {
+    "id": "018f3a1b-2c3d-4e5f-8a9b-222222222222",
+    "server_id": "018f3a1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b",
+    "name": "general-chat",
+    "type": 0,
+    "position": 1
+  }
+]
+```
+
+---
+
+### Create Channel
+
+Creates a new channel within a server. Channel types: `0` (text), `1` (voice), `2` (category). Text channels format names to lowercase and replace spaces with hyphens.
+
+* **URL:** `/api/v1/servers/{server_id}/channels`
+* **Method:** `POST`
+* **Auth Required:** Yes (Requires server membership)
+
+**Request Body** (`application/json`)
+
+```json
+{
+  "name": "General Chat",
+  "type": 0,
+  "position": 1
+}
+```
+
+**Response: `201 Created`**
+
+---
+
+### Delete Channel
+
+Deletes a specific channel by ID.
+
+* **URL:** `/api/v1/servers/{server_id}/channels/{channel_id}`
+* **Method:** `DELETE`
+* **Auth Required:** Yes (Requires server membership)
+
+**Response: `204 No Content`**

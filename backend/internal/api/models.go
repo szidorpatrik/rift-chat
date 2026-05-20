@@ -26,6 +26,8 @@ type ApiConfig struct {
 	LogBatcher      *logger.LogBatcher
 	WTServer        *webtransport.Server
 	Valkey          *redis.Client
+	CertPath        string
+	KeyPath         string
 }
 
 type RespondError struct {

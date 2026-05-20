@@ -46,6 +46,9 @@ func main() {
 			Addr:            cfg.FullAddressQuic,
 			Handler:         identifiedRouter,
 			EnableDatagrams: true,
+			TLSConfig: &tls.Config{
+				NextProtos: []string{"h3"},
+			},
 		},
 		CheckOrigin: func(r *http.Request) bool {
 			return true
@@ -54,27 +57,8 @@ func main() {
 	cfg.WTServer = wtServer
 
 	go func() {
-		certFile := "/root/certs/cert.pem"
-		keyFile := "/root/certs/key.pem"
-		if cfg.Platform == "" || cfg.Platform == "dev" || cfg.Platform == "development" {
-			certFile = "./certs/dev/cert.pem"
-			keyFile = "./certs/dev/key.pem"
-		}
-		
-		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-		if err != nil {
-			log.Fatalf("FATAL: Failed to load WebTransport certificates: %v", err)
-		}
-		
-		tlsConfig := &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			NextProtos:   []string{"h3"},
-		}
-		
-		wtServer.H3.TLSConfig = tlsConfig
-		
 		log.Printf("rift-chat WebTransport listening on: %v (UDP)\n", cfg.FullAddressQuic)
-		log.Fatal(wtServer.ListenAndServe())
+		log.Fatal(wtServer.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath))
 	}()
 
 	httpServer := &http.Server{

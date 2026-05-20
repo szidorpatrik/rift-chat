@@ -56,6 +56,8 @@ Create them by copying the provided examples:
 ```bash
 cp .env-example .env
 cp backend/.env-dev-example backend/.env-dev
+mkdir -p ./backend/certs/dev
+mkdir -p ./postgres/data
 ```
 
 **File 1: `.env` (Used by Docker Compose)**
@@ -93,10 +95,10 @@ When you run the backend natively using `air`, Go cannot see the Docker internal
 
 ### 3. Start the Infrastructure
 
-Spin up PostgreSQL in the background. You only need to run this once.
+Spin up PostgreSQL and Valkey in the background. You only need to run this once.
 
 ```bash
-docker compose up -d db
+docker compose up -d db valkey
 ```
 
 Create a new database for development, change the credentials in `backend/.env-dev` if you want to customize them:
@@ -119,6 +121,8 @@ The API will now be listening on `http://0.0.0.0:8081`.
 
 ```text
 rift-chat-api/
+├── certs/              # TLS certificates
+│   └── dev/            # development TLS certificates
 ├── internal/
 │   ├── api/            # HTTP handlers, middleware, and routing logic
 │   ├── auth/           # JWT generation, validation, and password hashing
@@ -129,6 +133,7 @@ rift-chat-api/
 │   ├── queries/        # Raw .sql files containing queries
 │   └── schema/         # Database migration files (goose)
 ├── .dockerignore       # Docker ignore file
+├── .env-dev            # Development environment variables
 ├── Dockerfile          # Dockerfile for containerizing the API
 ├── main.go             # Application entrypoint
 └── sqlc.yml            # sqlc configuration file
@@ -136,7 +141,8 @@ rift-chat-api/
 
 ## API Documentation
 
-All API endpoints are prefixed with `/api/v1`.
+All REST API endpoints are prefixed with `/api/v1`.
+All WEBTRANSPORT endpoints are prefixed with `/wt`.
 
 For complete documentation regarding request/response shapes, headers, and status codes, please refer to the [API Documentation](../docs/api.md) file.
 
