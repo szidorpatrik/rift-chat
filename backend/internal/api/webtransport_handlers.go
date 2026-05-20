@@ -10,7 +10,13 @@ import (
 )
 
 func (cfg *ApiConfig) WebTransportHandler(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value(userContextKey).(uuid.UUID)
+	var userId uuid.UUID
+	if val, ok := r.Context().Value(userContextKey).(uuid.UUID); ok {
+		userId = val
+	} else {
+		// Assign a Nil UUID for unauthenticated TEST connections
+		userId = uuid.Nil 
+	}
 
 	log.Println("method:", r.Method)
 	log.Println("proto:", r.Proto)
