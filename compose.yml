@@ -13,9 +13,6 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - ./postgres/data:/var/lib/postgresql/18/docker
-    depends_on:
-      valkey:
-        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 5s
@@ -37,8 +34,6 @@ services:
       - BACKEND_LISTEN_ADDR=${BACKEND_LISTEN_ADDR}
       - BACKEND_JWT_SECRET=${BACKEND_JWT_SECRET}
       - BACKEND_DATABASE_URL=${BACKEND_DATABASE_URL}
-      - BACKEND_VALKEY_HOST=${BACKEND_VALKEY_HOST}
-      - BACKEND_VALKEY_PORT=${BACKEND_VALKEY_PORT}
       - BACKEND_CERT_NAME=${BACKEND_CERT_NAME}
       - BACKEND_KEY_NAME=${BACKEND_KEY_NAME}
     ports:
@@ -90,7 +85,6 @@ services:
       - "443:443"
     volumes:
       - './caddy/Caddyfile:/etc/caddy/Caddyfile'
-      - './backend/certs:/etc/caddy/certs:ro'
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
@@ -101,26 +95,9 @@ services:
     networks:
       - riftchat_network
 
-  valkey:
-    image: valkey/valkey:latest
-    container_name: ${VALKEY_CONTAINER_NAME}
-    restart: unless-stopped
-    ports:
-      - "${BACKEND_VALKEY_PORT}:6379"
-    volumes:
-      - valkey_data:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - riftchat_network
-
 volumes:
   caddy_data:
   caddy_config:
-  valkey_data:
 
 networks:
   riftchat_network:

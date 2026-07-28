@@ -4,7 +4,7 @@ import type { ServerResponse, ChannelResponse, ServerRequest, MemberResponse } f
 import { serverService } from '@services/serverService'
 import { usePublicServerStore } from '@stores/publicServerStore'
 import { useChannelStore } from '@stores/channelStore'
-import { useMemberStore } from './memberStore'
+import { useMemberStore } from '@stores/memberStore'
 
 export interface Server extends ServerResponse {
     channels: ChannelResponse[],

@@ -1,4 +1,4 @@
-FROM oven/bun:alpine AS builder
+FROM oven/bun:slim AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN bun run build-strict
 
 # ==========================================
 
-FROM oven/bun:alpine
+FROM oven/bun:slim
 
 WORKDIR /app
 

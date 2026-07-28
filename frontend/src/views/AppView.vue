@@ -6,11 +6,9 @@ import ChannelSidebar from '@components/ChannelSidebar.vue'
 import ChatArea from '@components/ChatArea.vue'
 import UserProfile from '@components/UserProfile.vue'
 import { useServerStore } from '@stores/serverStore'
-import { useRealtimeStore } from '@stores/realtimeStore'
 
 const authStore = useAuthStore()
 const serverStore = useServerStore()
-const realtimeStore = useRealtimeStore()
 
 onMounted(async () => {
     try {
@@ -20,7 +18,6 @@ onMounted(async () => {
         const areServersLoaded = await serverStore.loadServers()
         if (!areServersLoaded) return
 
-        await realtimeStore.connect()
     } catch (error) {
         console.error('Initialization failed:', error)
     }

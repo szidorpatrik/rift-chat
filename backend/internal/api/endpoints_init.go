@@ -6,12 +6,6 @@ func (cfg *ApiConfig) registerSystemRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /healthz", cfg.HealthzHandler)
 }
 
-func(cfg *ApiConfig) registerWebtransportRoutes(mux *http.ServeMux) {
-	wtHandler := http.HandlerFunc(cfg.WebTransportHandler)
-	//mux.Handle("/wt", cfg.RequireAuth(wtHandler))
-	mux.Handle("/wt", wtHandler)
-}
-
 func (cfg *ApiConfig) registerAuthRoutes(mux *http.ServeMux) {
 	mux.HandleFunc(newEndpoint("POST", "/users"), cfg.CreateUserHandler)
 	mux.HandleFunc(newEndpoint("POST", "/login"), cfg.LoginHandler)
