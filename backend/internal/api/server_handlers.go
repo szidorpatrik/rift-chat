@@ -204,13 +204,7 @@ func (cfg *ApiConfig) GetServerMembersHandler(w http.ResponseWriter, r *http.Req
 
 	res := make([]MembersResponse, len(members))
 	for i, member := range members {
-		res[i] = MembersResponse{
-			ID:          member.UserID,
-			Username:    member.Username,
-			Status:      member.Status.String,
-			AvatarUrl:   member.AvatarUrl.String,
-			Description: member.Description.String,
-		}
+		res[i] = getMembersResponse(member)
 	}
 	RespondWithJSON(w, http.StatusOK, res)
 }
@@ -228,5 +222,15 @@ func getServerResponse(server database.Server) ServerResponse {
 		IsPublic:      server.IsPublic,
 		CreatedAt:     server.CreatedAt.Time,
 		UpdatedAt:     server.UpdatedAt.Time,
+	}
+}
+
+func getMembersResponse(member database.GetServerMembersRow) MembersResponse {
+	return MembersResponse{
+		ID:          member.UserID,
+		Username:    member.Username,
+		Status:      member.Status.String,
+		AvatarUrl:   member.AvatarUrl.String,
+		Description: member.Description.String,
 	}
 }

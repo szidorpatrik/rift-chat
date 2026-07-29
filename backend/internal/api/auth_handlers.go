@@ -126,14 +126,7 @@ func (cfg *ApiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	cfg.LogInfo(r, "user logged in", user.ID, EventLogin)
 
-	res := LoginResponse{
-		ID:          user.ID.String(),
-		Username:    user.Username,
-		Email:       user.Email,
-		AvatarUrl:   user.AvatarUrl.String,
-		Status:      user.Status.String,
-		Description: user.Description.String,
-	}
+	res := getLoginResponse(user)
 	RespondWithJSON(w, http.StatusOK, res)
 }
 
@@ -249,7 +242,12 @@ func (cfg *ApiConfig) SessionCheckHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	cfg.LogInfo(r, "session check successful", user.ID, EventSessionCheckSuccess)
-	res := LoginResponse{
+	res := getLoginResponse(user)
+	RespondWithJSON(w, http.StatusOK, res)
+}
+
+func getLoginResponse(user database.User) LoginResponse {
+	return LoginResponse{
 		ID:          user.ID.String(),
 		Username:    user.Username,
 		Email:       user.Email,
@@ -257,5 +255,4 @@ func (cfg *ApiConfig) SessionCheckHandler(w http.ResponseWriter, r *http.Request
 		Status:      user.Status.String,
 		Description: user.Description.String,
 	}
-	RespondWithJSON(w, http.StatusOK, res)
 }

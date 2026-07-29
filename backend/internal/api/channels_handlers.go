@@ -29,13 +29,7 @@ func (cfg *ApiConfig) GetServerChannelsHandler(w http.ResponseWriter, r *http.Re
 
 	res := make([]ChannelResponse, len(channels))
 	for i, channel := range channels {
-		res[i] = ChannelResponse{
-			ID:       channel.ID,
-			ServerID: channel.ServerID,
-			Name:     channel.Name,
-			Type:     channel.Type,
-			Position: channel.Position,
-		}
+		res[i] = getChannelResponse(channel)
 	}
 	RespondWithJSON(w, http.StatusOK, res)
 }
@@ -93,13 +87,7 @@ func (cfg *ApiConfig) CreateChannelHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	cfg.LogInfo(r, "channel created successfully", channelId, EventChannelCreated, "server_id", serverId)
-	res := ChannelResponse{
-		ID:       channel.ID,
-		ServerID: channel.ServerID,
-		Name:     channel.Name,
-		Type:     channel.Type,
-		Position: channel.Position,
-	}
+	res := getChannelResponse(channel)
 	RespondWithJSON(w, http.StatusCreated, res)
 }
 
@@ -132,4 +120,14 @@ func (cfg *ApiConfig) DeleteChannelHandler(w http.ResponseWriter, r *http.Reques
 
 	cfg.LogInfo(r, "channel deleted successfully", channelId, EventChannelDeleted)
 	RespondNoContent(w)
+}
+
+func getChannelResponse(channel database.Channel) ChannelResponse {
+	return ChannelResponse{
+		ID:       channel.ID,
+		ServerID: channel.ServerID,
+		Name:     channel.Name,
+		Type:     channel.Type,
+		Position: channel.Position,
+	}
 }
