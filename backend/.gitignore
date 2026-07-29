@@ -3,6 +3,7 @@ riftchat-api
 out/
 .idea/
 certs/
+!certs/.gitkeep
 .env
 .env-dev
 tmp/

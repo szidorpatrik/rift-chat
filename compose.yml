@@ -43,14 +43,9 @@ services:
       db:
         condition: service_healthy
         required: true
-        restart: true
+        restart: false
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider
-            http://127.0.0.1:${BACKEND_HTTP_PORT}/api/v1/healthz || exit 1",
-        ]
+      test: ["CMD", "/rift-chat-api", "healthcheck"]
       interval: 10s
       timeout: 5s
       retries: 3

@@ -9,20 +9,18 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o rift-chat-api .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o rift-chat-api .
 
 # ==========================================
-FROM alpine:latest  
+FROM scratch
 
-# Add CA certificates so the Go server can make secure HTTPS requests if needed
-RUN apk --no-cache add ca-certificates tzdata
+WORKDIR /
 
-WORKDIR /root/
-
-COPY --from=builder /app/rift-chat-api .
-RUN chmod +x ./rift-chat-api
+# Copy the static binary
+COPY --from=builder /app/rift-chat-api /rift-chat-api
 
 EXPOSE 8081
 EXPOSE 4242/udp
 
-CMD ["./rift-chat-api"]
+# Direct exec form (no shell needed)
+ENTRYPOINT ["/rift-chat-api"]
