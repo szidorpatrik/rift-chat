@@ -93,6 +93,13 @@ func checkRefreshTokenValid(token database.RefreshToken) bool {
 	return !token.RevokedAt.Valid && !token.ExpiresAt.Before(time.Now())
 }
 
+func buildRefreshTokenParams(userID uuid.UUID, token string) database.CreateRefreshTokenParams {
+	return database.CreateRefreshTokenParams{
+		UserID: userID,
+		Token:  token,
+	}
+}
+
 // Creates a cookie for JWTs and refresh tokens
 func (cfg *ApiConfig) setAuthCookie(w http.ResponseWriter, name, value string, duration time.Duration) {
 	isSecure := cfg.Platform == "production" || cfg.Platform == "prod"
@@ -108,6 +115,11 @@ func (cfg *ApiConfig) setAuthCookie(w http.ResponseWriter, name, value string, d
 	})
 }
 
+func (cfg *ApiConfig) setAuthCookiePair(w http.ResponseWriter, accessToken, refreshToken string) {
+	cfg.setAuthCookie(w, cookieAccessToken, accessToken, accessTokenExpiry)
+	cfg.setAuthCookie(w, cookieRefreshToken, refreshToken, refreshTokenExpiry)
+}
+
 // Overwrites an existing cookie to instantly expire it
 func (cfg *ApiConfig) clearAuthCookie(w http.ResponseWriter, name string) {
 	isSecure := cfg.Platform == "production" || cfg.Platform == "prod"
@@ -121,6 +133,11 @@ func (cfg *ApiConfig) clearAuthCookie(w http.ResponseWriter, name string) {
 		Secure:   isSecure,
 		SameSite: http.SameSiteStrictMode,
 	})
+}
+
+func (cfg *ApiConfig) clearAuthCookies(w http.ResponseWriter) {
+	cfg.clearAuthCookie(w, cookieAccessToken)
+	cfg.clearAuthCookie(w, cookieRefreshToken)
 }
 
 func (cfg *ApiConfig) handleAuthError(w http.ResponseWriter, r *http.Request, code int, msg string, err error, event EventType, isError bool, shouldRespondErrMsg bool, extraArgs ...any) {

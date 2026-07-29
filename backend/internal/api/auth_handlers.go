@@ -98,10 +98,7 @@ func (cfg *ApiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	refreshToken, hashedRefreshToken := auth.MakeRefreshToken()
-	params := database.CreateRefreshTokenParams{
-		UserID: user.ID,
-		Token:  hashedRefreshToken,
-	}
+	params := buildRefreshTokenParams(user.ID, hashedRefreshToken)
 	if _, err := cfg.DbQueries.CreateRefreshToken(r.Context(), params); err != nil {
 		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to save refresh token", err, EventDbError, true, false, "user_id", user.ID)
 		return
@@ -113,8 +110,7 @@ func (cfg *ApiConfig) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg.setAuthCookie(w, cookieAccessToken, accessToken, accessTokenExpiry)
-	cfg.setAuthCookie(w, cookieRefreshToken, refreshToken, refreshTokenExpiry)
+	cfg.setAuthCookiePair(w, accessToken, refreshToken)
 
 	cfg.LogInfo(r, "user logged in", user.ID, EventLogin)
 
@@ -154,10 +150,7 @@ func (cfg *ApiConfig) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	newRefreshToken, newHashedRefreshToken := auth.MakeRefreshToken()
-	createParams := database.CreateRefreshTokenParams{
-		UserID: dbToken.UserID,
-		Token:  newHashedRefreshToken,
-	}
+	createParams := buildRefreshTokenParams(dbToken.UserID, newHashedRefreshToken)
 
 	// Start a transaction
 	tx, err := cfg.DB.BeginTx(r.Context(), nil)
@@ -188,8 +181,7 @@ func (cfg *ApiConfig) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	cfg.setAuthCookie(w, cookieAccessToken, newToken, accessTokenExpiry)
-	cfg.setAuthCookie(w, cookieRefreshToken, newRefreshToken, refreshTokenExpiry)
+	cfg.setAuthCookiePair(w, newToken, newRefreshToken)
 
 	cfg.LogInfo(r, "access token refreshed", dbToken.UserID, EventAccessTokenRefreshed)
 	RespondNoContent(w)
@@ -207,8 +199,7 @@ func (cfg *ApiConfig) RevokeTokenHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Clear cookies
-	cfg.clearAuthCookie(w, cookieAccessToken)
-	cfg.clearAuthCookie(w, cookieRefreshToken)
+	cfg.clearAuthCookies(w)
 
 	cfg.LogInfo(r, "refresh token revoked", uuid.Nil, EventRefreshTokenRevoked)
 
