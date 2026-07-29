@@ -3,7 +3,7 @@ package api
 import "net/http"
 
 func (cfg *ApiConfig) registerSystemRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /healthz", cfg.HealthzHandler)
+	mux.HandleFunc(newEndpoint("GET", "/healthz"), cfg.HealthzHandler)
 }
 
 func (cfg *ApiConfig) registerAuthRoutes(mux *http.ServeMux) {

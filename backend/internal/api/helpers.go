@@ -19,8 +19,8 @@ func RespondWithError(w http.ResponseWriter, code int, msg string) {
 		RespondWithError(w, http.StatusInternalServerError, "something went wrong")
 		return
 	}
-	w.WriteHeader(code)
 	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(code)
 	w.Write(payload)
 }
 
