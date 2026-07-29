@@ -100,6 +100,36 @@ func buildRefreshTokenParams(userID uuid.UUID, token string) database.CreateRefr
 	}
 }
 
+func (cfg *ApiConfig) rotateRefreshToken(ctx context.Context, userID uuid.UUID, oldHashedToken string) (string, string, error) {
+	accessToken, err := auth.MakeJWT(userID, cfg.JwtSecret, accessTokenExpiry)
+	if err != nil {
+		return "", "", err
+	}
+
+	newRefreshToken, newHashedRefreshToken := auth.MakeRefreshToken()
+
+	tx, err := cfg.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return "", "", err
+	}
+	defer tx.Rollback()
+
+	qtx := cfg.DbQueries.WithTx(tx)
+	if _, err := qtx.CreateRefreshToken(ctx, buildRefreshTokenParams(userID, newHashedRefreshToken)); err != nil {
+		return "", "", err
+	}
+
+	if err := qtx.RevokeRefreshToken(ctx, oldHashedToken); err != nil {
+		return "", "", err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return "", "", err
+	}
+
+	return accessToken, newRefreshToken, nil
+}
+
 // Creates a cookie for JWTs and refresh tokens
 func (cfg *ApiConfig) setAuthCookie(w http.ResponseWriter, name, value string, duration time.Duration) {
 	isSecure := cfg.Platform == "production" || cfg.Platform == "prod"

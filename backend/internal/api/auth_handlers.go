@@ -143,41 +143,9 @@ func (cfg *ApiConfig) RefreshTokenHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	newToken, err := auth.MakeJWT(dbToken.UserID, cfg.JwtSecret, accessTokenExpiry)
+	newToken, newRefreshToken, err := cfg.rotateRefreshToken(r.Context(), dbToken.UserID, hashedToken)
 	if err != nil {
-		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to sign new access token", err, EventAccessTokenFailedSign, true, false, "user_id", dbToken.UserID)
-		return
-	}
-
-	newRefreshToken, newHashedRefreshToken := auth.MakeRefreshToken()
-	createParams := buildRefreshTokenParams(dbToken.UserID, newHashedRefreshToken)
-
-	// Start a transaction
-	tx, err := cfg.DB.BeginTx(r.Context(), nil)
-	if err != nil {
-		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to begin database transaction", err, EventDbError, true, false, "user_id", dbToken.UserID)
-		return
-	}
-
-	// If a return happens early, it rolls back
-	defer tx.Rollback()
-
-	// Bind the sqlc queries to this specific transaction
-	qtx := cfg.DbQueries.WithTx(tx)
-
-	if _, err := qtx.CreateRefreshToken(r.Context(), createParams); err != nil {
-		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to create new refresh token during rotation", err, EventDbError, true, false, "user_id", dbToken.UserID)
-		return
-	}
-
-	if err := qtx.RevokeRefreshToken(r.Context(), hashedToken); err != nil {
-		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to revoke old refresh token during rotation", err, EventDbError, true, false, "user_id", dbToken.UserID)
-		return
-	}
-
-	// If both queries succeed, commit to the database
-	if err := tx.Commit(); err != nil {
-		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to commit token rotation transaction", err, EventDbError, true, false, "user_id", dbToken.UserID)
+		cfg.handleAuthError(w, r, http.StatusInternalServerError, "failed to rotate refresh token", err, EventDbError, true, false, "user_id", dbToken.UserID)
 		return
 	}
 
