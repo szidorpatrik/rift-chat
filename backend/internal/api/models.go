@@ -12,13 +12,11 @@ import (
 
 type ApiConfig struct {
 	HttpPort        int32
-	QuicPort        int32
 	Platform        string
 	DbUrl           string
 	DbQueries       *database.Queries
 	DB              *sql.DB
 	FullAddress     string
-	FullAddressQuic string
 	JwtSecret       string
 	Logger          *slog.Logger
 	LogBatcher      *logger.LogBatcher

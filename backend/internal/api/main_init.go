@@ -45,9 +45,8 @@ func (cfg *ApiConfig) LoadEnvs() error {
 	}
 
 	requiredEnvs := []string{
-		"BACKEND_HTTP_PORT", "BACKEND_QUIC_PORT", "BACKEND_LISTEN_ADDR",
-		"BACKEND_JWT_SECRET", "BACKEND_DATABASE_URL", "BACKEND_CERT_NAME", 
-		"BACKEND_KEY_NAME",
+		"BACKEND_HTTP_PORT", "BACKEND_LISTEN_ADDR", "BACKEND_JWT_SECRET",
+		"BACKEND_DATABASE_URL", "BACKEND_CERT_NAME", "BACKEND_KEY_NAME",
 	}
 
 	for _, envKey := range requiredEnvs {
@@ -61,23 +60,15 @@ func (cfg *ApiConfig) LoadEnvs() error {
 		return fmt.Errorf("invalid value for BACKEND_HTTP_PORT: %v", err)
 	}
 
-	quicPort := os.Getenv("BACKEND_QUIC_PORT")
-	if _, err := strconv.ParseInt(quicPort, 10, 64); err != nil {
-		return fmt.Errorf("invalid value for BACKEND_QUIC_PORT: %v", err)
-	}
-
 	listenAddr := os.Getenv("BACKEND_LISTEN_ADDR")
 	jwtSecret := os.Getenv("BACKEND_JWT_SECRET")
 	dbUrl := os.Getenv("BACKEND_DATABASE_URL")
 	httpPortInt, _ := strconv.ParseInt(httpPort, 10, 64)
-	quicPortInt, _ := strconv.ParseInt(quicPort, 10, 64)
 
 	cfg.HttpPort = int32(httpPortInt)
-	cfg.QuicPort = int32(quicPortInt)
 	cfg.Platform = platform
 	cfg.DbUrl = dbUrl
 	cfg.FullAddress = fmt.Sprintf("%v:%v", listenAddr, httpPort)
-	cfg.FullAddressQuic = fmt.Sprintf("%v:%v", listenAddr, quicPort)
 	cfg.JwtSecret = jwtSecret
 	return nil
 }

@@ -29,16 +29,14 @@ services:
     restart: unless-stopped
     environment:
       - BACKEND_HTTP_PORT=${BACKEND_HTTP_PORT}
-      - BACKEND_QUIC_PORT=${BACKEND_QUIC_PORT}
       - BACKEND_PLATFORM=${BACKEND_PLATFORM}
       - BACKEND_LISTEN_ADDR=${BACKEND_LISTEN_ADDR}
       - BACKEND_JWT_SECRET=${BACKEND_JWT_SECRET}
       - BACKEND_DATABASE_URL=${BACKEND_DATABASE_URL}
       - BACKEND_CERT_NAME=${BACKEND_CERT_NAME}
       - BACKEND_KEY_NAME=${BACKEND_KEY_NAME}
-    ports:
+    #ports:
     #  - "${BACKEND_HTTP_PORT}:${BACKEND_HTTP_PORT}"
-      - "${BACKEND_QUIC_PORT}:${BACKEND_QUIC_PORT}/udp"
     volumes:
       - ./backend/certs:/root/certs:ro
     depends_on:
@@ -51,7 +49,7 @@ services:
         [
           "CMD-SHELL",
           "wget --no-verbose --tries=1 --spider
-            http://127.0.0.1:${BACKEND_HTTP_PORT}/healthz || exit 1",
+            http://127.0.0.1:${BACKEND_HTTP_PORT}/api/v1/healthz || exit 1",
         ]
       interval: 10s
       timeout: 5s
