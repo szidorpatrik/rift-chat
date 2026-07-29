@@ -53,13 +53,7 @@ func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	cfg.LogInfo(r, "user registered successfully", createdUser.ID, EventRegister)
 
-	res := CreateUserResponse{
-		ID:        createdUser.ID.String(),
-		Username:  createdUser.Username,
-		Email:     createdUser.Email,
-		CreatedAt: createdUser.CreatedAt.Time.UTC(),
-		UpdatedAt: createdUser.UpdatedAt.Time.UTC(),
-	}
+	res := getCreateUserResponse(createdUser)
 	RespondWithJSON(w, http.StatusCreated, res)
 }
 
@@ -205,6 +199,16 @@ func getLoginResponse(user database.User) LoginResponse {
 		AvatarUrl:   user.AvatarUrl.String,
 		Status:      user.Status.String,
 		Description: user.Description.String,
+	}
+}
+
+func getCreateUserResponse(user database.User) CreateUserResponse {
+	return CreateUserResponse{
+		ID:        user.ID.String(),
+		Username:  user.Username,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt.Time.UTC(),
+		UpdatedAt: user.UpdatedAt.Time.UTC(),
 	}
 }
 

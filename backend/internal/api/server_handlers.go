@@ -143,10 +143,7 @@ func (cfg *ApiConfig) JoinServerHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	params := database.JoinServerParams{
-		ServerID: serverId,
-		UserID:   userId,
-	}
+	params := buildJoinServerParams(serverId, userId)
 
 	if err := cfg.DbQueries.JoinServer(r.Context(), params); err != nil {
 

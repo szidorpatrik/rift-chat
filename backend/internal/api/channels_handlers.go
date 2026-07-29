@@ -100,10 +100,7 @@ func (cfg *ApiConfig) DeleteChannelHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	params := database.DeleteChannelByIdParams{
-		ID:       channelId,
-		ServerID: serverId,
-	}
+	params := buildDeleteChannelParams(channelId, serverId)
 
 	if err := cfg.DbQueries.DeleteChannelById(r.Context(), params); err != nil {
 		cfg.LogError(r, err, EventChannelDeleteFailed, "channel_id", channelId)
@@ -137,5 +134,12 @@ func buildCreateChannelParams(req ChannelCreateRequest, serverId, channelId uuid
 		Name:     name,
 		Type:     req.Type,
 		Position: req.Position,
+	}
+}
+
+func buildDeleteChannelParams(channelId, serverId uuid.UUID) database.DeleteChannelByIdParams {
+	return database.DeleteChannelByIdParams{
+		ID:       channelId,
+		ServerID: serverId,
 	}
 }
