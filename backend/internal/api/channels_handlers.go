@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -38,8 +37,8 @@ func (cfg *ApiConfig) GetServerChannelsHandler(w http.ResponseWriter, r *http.Re
 func (cfg *ApiConfig) CreateChannelHandler(w http.ResponseWriter, r *http.Request) {
 	serverId := r.Context().Value(serverContextKey).(uuid.UUID)
 
-	var req ChannelCreateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeJSONBody[ChannelCreateRequest](r)
+	if err != nil {
 		cfg.LogWarn(r, "invalid request body", serverId, EventChannelCreateFailed)
 		RespondWithError(w, http.StatusBadRequest, "invalid request body")
 		return

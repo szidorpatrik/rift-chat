@@ -39,6 +39,14 @@ func RespondNoContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func decodeJSONBody[T any](r *http.Request) (T, error) {
+	var req T
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return req, err
+	}
+	return req, nil
+}
+
 func (cfg *ApiConfig) LogError(r *http.Request, err error, event EventType, extraArgs ...any) {
 	args := append([]any{
 		"event", event.String(),

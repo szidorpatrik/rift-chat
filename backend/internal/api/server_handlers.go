@@ -2,7 +2,6 @@ package api
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -49,8 +48,8 @@ func (cfg *ApiConfig) GetPublicServersHandler(w http.ResponseWriter, r *http.Req
 func (cfg *ApiConfig) CreateServerHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userContextKey).(uuid.UUID)
 
-	var req ServerRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeJSONBody[ServerRequest](r)
+	if err != nil {
 		cfg.LogWarn(r, "invalid request body", userId, EventServerCreateFailed)
 		RespondWithError(w, http.StatusBadRequest, "invalid request body")
 		return
@@ -140,8 +139,8 @@ func (cfg *ApiConfig) CreateServerHandler(w http.ResponseWriter, r *http.Request
 
 func (cfg *ApiConfig) JoinServerHandler(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userContextKey).(uuid.UUID)
-	var req ServerJoinRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeJSONBody[ServerJoinRequest](r)
+	if err != nil {
 		cfg.LogWarn(r, "invalid request body", userId, EventServerJoinFailed)
 		RespondWithError(w, http.StatusBadRequest, "invalid request body")
 		return
