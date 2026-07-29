@@ -76,27 +76,7 @@ func (cfg *ApiConfig) CreateServerHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var serverDesc sql.NullString
-
-	if req.Description != "" {
-		serverDesc = sql.NullString{
-			String: req.Description,
-			Valid:  true,
-		}
-	} else {
-		serverDesc = sql.NullString{
-			String: "",
-			Valid:  false,
-		}
-	}
-
-	createServerParams := database.CreateServerParams{
-		ID:          serverId,
-		OwnerID:     userId,
-		Name:        req.Name,
-		Description: serverDesc,
-		IsPublic:    req.IsPublic,
-	}
+	createServerParams := buildCreateServerParams(req, userId, serverId)
 
 	tx, err := cfg.DB.BeginTx(r.Context(), nil)
 	if err != nil {
@@ -114,10 +94,7 @@ func (cfg *ApiConfig) CreateServerHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	joinServerParams := database.JoinServerParams{
-		ServerID: serverId,
-		UserID:   userId,
-	}
+	joinServerParams := buildJoinServerParams(serverId, userId)
 	if err := qtx.JoinServer(r.Context(), joinServerParams); err != nil {
 		cfg.LogError(r, err, EventServerJoinFailed)
 		RespondWithError(w, http.StatusInternalServerError, "failed to join server")
@@ -231,5 +208,27 @@ func getMembersResponse(member database.GetServerMembersRow) MembersResponse {
 		Status:      member.Status.String,
 		AvatarUrl:   member.AvatarUrl.String,
 		Description: member.Description.String,
+	}
+}
+
+func buildCreateServerParams(req ServerRequest, userId, serverId uuid.UUID) database.CreateServerParams {
+	var serverDesc sql.NullString
+	if req.Description != "" {
+		serverDesc = sql.NullString{String: sanitizeInput(req.Description, " "), Valid: true}
+	}
+
+	return database.CreateServerParams{
+		ID:          serverId,
+		OwnerID:     userId,
+		Name:        sanitizeInput(req.Name, " "),
+		Description: serverDesc,
+		IsPublic:    req.IsPublic,
+	}
+}
+
+func buildJoinServerParams(serverId, userId uuid.UUID) database.JoinServerParams {
+	return database.JoinServerParams{
+		ServerID: serverId,
+		UserID:   userId,
 	}
 }

@@ -43,15 +43,7 @@ func (cfg *ApiConfig) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	req.Username = sanitizeInput(req.Username, " ")
-	req.Email = sanitizeInput(req.Email, " ")
-
-	params := database.CreateUserParams{
-		ID:           userId,
-		Username:     req.Username,
-		Email:        req.Email,
-		PasswordHash: passwordHash,
-	}
+	params := buildCreateUserParams(req, userId, passwordHash)
 
 	createdUser, err := cfg.DbQueries.CreateUser(r.Context(), params)
 	if err != nil {
@@ -254,5 +246,14 @@ func getLoginResponse(user database.User) LoginResponse {
 		AvatarUrl:   user.AvatarUrl.String,
 		Status:      user.Status.String,
 		Description: user.Description.String,
+	}
+}
+
+func buildCreateUserParams(req CreateUserRequest, userId uuid.UUID, passwordHash string) database.CreateUserParams {
+	return database.CreateUserParams{
+		ID:           userId,
+		Username:     sanitizeInput(req.Username, " "),
+		Email:        sanitizeInput(req.Email, " "),
+		PasswordHash: passwordHash,
 	}
 }

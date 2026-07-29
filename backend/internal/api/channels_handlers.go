@@ -71,13 +71,7 @@ func (cfg *ApiConfig) CreateChannelHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	params := database.CreateChannelParams{
-		ID:       channelId,
-		ServerID: serverId,
-		Name:     req.Name,
-		Type:     req.Type,
-		Position: req.Position,
-	}
+	params := buildCreateChannelParams(req, serverId, channelId)
 	channel, err := cfg.DbQueries.CreateChannel(r.Context(), params)
 	if err != nil {
 		cfg.LogError(r, err, EventChannelCreateFailed, "server_id", serverId)
@@ -128,5 +122,20 @@ func getChannelResponse(channel database.Channel) ChannelResponse {
 		Name:     channel.Name,
 		Type:     channel.Type,
 		Position: channel.Position,
+	}
+}
+
+func buildCreateChannelParams(req ChannelCreateRequest, serverId, channelId uuid.UUID) database.CreateChannelParams {
+	name := sanitizeInput(req.Name, " ")
+	if req.Type == 0 {
+		name = strings.ToLower(whitespace.ReplaceAllString(name, "-"))
+	}
+
+	return database.CreateChannelParams{
+		ID:       channelId,
+		ServerID: serverId,
+		Name:     name,
+		Type:     req.Type,
+		Position: req.Position,
 	}
 }
