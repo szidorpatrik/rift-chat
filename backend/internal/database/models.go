@@ -75,9 +75,9 @@ type User struct {
 	Email        string
 	AvatarUrl    sql.NullString
 	Status       sql.NullString
+	Description  sql.NullString
 	PasswordHash string `json:"-"`
 	CreatedAt    sql.NullTime
 	UpdatedAt    sql.NullTime
 	DeletedAt    sql.NullTime
-	Description  sql.NullString
 }

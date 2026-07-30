@@ -58,6 +58,17 @@ func (q *Queries) CreateServer(ctx context.Context, arg CreateServerParams) (Ser
 	return i, err
 }
 
+const getOwnerIdByServerId = `-- name: GetOwnerIdByServerId :one
+SELECT owner_id FROM servers WHERE id = $1
+`
+
+func (q *Queries) GetOwnerIdByServerId(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getOwnerIdByServerId, id)
+	var owner_id uuid.UUID
+	err := row.Scan(&owner_id)
+	return owner_id, err
+}
+
 const getPublicServers = `-- name: GetPublicServers :many
 SELECT id, name, owner_id, icon_url, created_at, is_public, description, updated_at, deleted_at, background_url FROM servers WHERE is_public = true
 `
@@ -118,10 +129,39 @@ func (q *Queries) GetServerById(ctx context.Context, id uuid.UUID) (Server, erro
 	return i, err
 }
 
+const getServerMemberIds = `-- name: GetServerMemberIds :many
+SELECT user_id FROM server_members WHERE server_id = $1
+`
+
+func (q *Queries) GetServerMemberIds(ctx context.Context, serverID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.QueryContext(ctx, getServerMemberIds, serverID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getServerMembers = `-- name: GetServerMembers :many
-SELECT id, username, email, avatar_url, status, password_hash, created_at, updated_at, deleted_at, description, server_id, user_id, server_name, joined_at FROM users
-INNER JOIN server_members ON server_members.user_id = users.id
-WHERE server_members.server_id = $1
+SELECT id, username, email, avatar_url, status, description, password_hash, created_at, updated_at, deleted_at, server_id, user_id, server_name, joined_at
+FROM users
+    INNER JOIN server_members ON server_members.user_id = users.id
+WHERE
+    server_members.server_id = $1
 `
 
 type GetServerMembersRow struct {
@@ -130,11 +170,11 @@ type GetServerMembersRow struct {
 	Email        string
 	AvatarUrl    sql.NullString
 	Status       sql.NullString
+	Description  sql.NullString
 	PasswordHash string `json:"-"`
 	CreatedAt    sql.NullTime
 	UpdatedAt    sql.NullTime
 	DeletedAt    sql.NullTime
-	Description  sql.NullString
 	ServerID     uuid.UUID
 	UserID       uuid.UUID
 	ServerName   sql.NullString
@@ -156,11 +196,11 @@ func (q *Queries) GetServerMembers(ctx context.Context, serverID uuid.UUID) ([]G
 			&i.Email,
 			&i.AvatarUrl,
 			&i.Status,
+			&i.Description,
 			&i.PasswordHash,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
-			&i.Description,
 			&i.ServerID,
 			&i.UserID,
 			&i.ServerName,
@@ -237,4 +277,54 @@ type JoinServerParams struct {
 func (q *Queries) JoinServer(ctx context.Context, arg JoinServerParams) error {
 	_, err := q.db.ExecContext(ctx, joinServer, arg.ServerID, arg.UserID)
 	return err
+}
+
+const leaveServer = `-- name: LeaveServer :one
+WITH
+    server_info AS (
+        SELECT owner_id
+        FROM servers
+        WHERE
+            id = $1
+    ),
+    deleted AS (
+        DELETE FROM server_members
+        WHERE
+            server_id = $1
+            AND user_id = $2
+            AND NOT EXISTS (
+                SELECT 1
+                FROM server_info
+                WHERE
+                    owner_id = $2
+            )
+        RETURNING
+            user_id
+    )
+SELECT COALESCE(
+        (
+            SELECT owner_id = $2
+            FROM server_info
+        ), false
+    )::boolean AS is_owner, EXISTS (
+        SELECT 1
+        FROM deleted
+    )::boolean AS was_deleted
+`
+
+type LeaveServerParams struct {
+	ID      uuid.UUID
+	OwnerID uuid.UUID
+}
+
+type LeaveServerRow struct {
+	IsOwner    bool
+	WasDeleted bool
+}
+
+func (q *Queries) LeaveServer(ctx context.Context, arg LeaveServerParams) (LeaveServerRow, error) {
+	row := q.db.QueryRowContext(ctx, leaveServer, arg.ID, arg.OwnerID)
+	var i LeaveServerRow
+	err := row.Scan(&i.IsOwner, &i.WasDeleted)
+	return i, err
 }

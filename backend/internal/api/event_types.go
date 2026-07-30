@@ -28,6 +28,8 @@ var eventName = map[EventType]string{
 	EventServerCreated:               "server_created",
 	EventServerJoinSuccess:           "server_join_success",
 	EventServerJoinFailed:            "server_join_failed",
+	EventServerLeaveSuccess:          "server_leave_success",
+	EventServerLeaveFailed:           "server_leave_failed",
 	EventServerNotMember:             "server_not_member",
 	EventMissingParameter:            "missing_parameter",
 	EventInvalidParameter:            "invalid_parameter",
@@ -67,6 +69,8 @@ const (
 	EventServerCreated
 	EventServerJoinSuccess
 	EventServerJoinFailed
+	EventServerLeaveSuccess
+	EventServerLeaveFailed
 	EventServerNotMember
 	EventMissingParameter
 	EventInvalidParameter

@@ -184,6 +184,35 @@ func (cfg *ApiConfig) GetServerMembersHandler(w http.ResponseWriter, r *http.Req
 
 //TODO: invite codes, leaving servers, deleting servers, kicking members, etc.
 
+func (cfg *ApiConfig) LeaveServerHandler(w http.ResponseWriter, r *http.Request) {
+	serverId := r.Context().Value(serverContextKey).(uuid.UUID)
+	userId := r.Context().Value(userContextKey).(uuid.UUID)
+
+	leaveServerParams := buildLeaveServerParams(serverId, userId)
+	res, err := cfg.DbQueries.LeaveServer(r.Context(), leaveServerParams)
+
+    if err != nil {
+        cfg.LogError(r, err, EventDbError)
+        RespondWithError(w, http.StatusInternalServerError, "something went wrong")
+        return
+    }
+
+    if res.IsOwner {
+        cfg.LogWarn(r, "server owner cannot leave", userId, EventServerLeaveFailed, "server_id", serverId)
+        RespondWithError(w, http.StatusForbidden, "server owner cannot leave the server")
+        return
+    }
+
+    if !res.WasDeleted {
+        cfg.LogWarn(r, "user not in server or server missing", userId, EventServerLeaveFailed, "server_id", serverId)
+        RespondWithError(w, http.StatusNotFound, "you are not a member of this server")
+        return
+    }
+
+    cfg.LogInfo(r, "user left server successfully", userId, EventServerLeaveSuccess, "server_id", serverId)
+    RespondNoContent(w)
+}
+
 func getServerResponse(server database.Server) ServerResponse {
 	return ServerResponse{
 		ID:            server.ID.String(),
@@ -227,5 +256,12 @@ func buildJoinServerParams(serverId, userId uuid.UUID) database.JoinServerParams
 	return database.JoinServerParams{
 		ServerID: serverId,
 		UserID:   userId,
+	}
+}
+
+func buildLeaveServerParams(serverId, userId uuid.UUID) database.LeaveServerParams {
+	return database.LeaveServerParams{
+		ID: serverId,
+		OwnerID: userId,
 	}
 }
