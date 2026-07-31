@@ -1,0 +1,382 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Rift Chat API",
+    "version": "1.0.0",
+    "description": "REST API for Rift Chat. Session auth uses HTTP-only cookies set by /api/v1/login. Use /api/v1/login first; Swagger UI cannot read HttpOnly cookie values from responses."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    { "name": "System" },
+    { "name": "Auth" },
+    { "name": "Servers" },
+    { "name": "Channels" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "accessTokenCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token",
+        "description": "Set by /api/v1/login. Swagger UI cannot read HttpOnly cookies from responses; authenticate by logging in, then browser cookies will be sent automatically."
+      },
+      "refreshTokenCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "refresh_token",
+        "description": "Set by /api/v1/login. Used for token rotation and logout."
+      }
+    },
+    "schemas": {
+      "RespondError": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "status_code": { "type": "integer", "format": "int32" }
+        },
+        "required": ["error"]
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password" }
+        },
+        "required": ["username", "email", "password"]
+      },
+      "CreateUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "username", "email", "created_at", "updated_at"]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string", "format": "password" }
+        },
+        "required": ["username", "password"]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "status": { "type": "string" },
+          "avatar_url": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["id", "username", "email", "status"]
+      },
+      "ServerRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "is_public": { "type": "boolean" }
+        },
+        "required": ["name"]
+      },
+      "ServerJoinRequest": {
+        "type": "object",
+        "properties": {
+          "server_id": { "type": "string", "format": "uuid" }
+        },
+        "required": ["server_id"]
+      },
+      "ServerResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "owner_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "icon_url": { "type": "string" },
+          "background_url": { "type": "string" },
+          "is_public": { "type": "boolean" },
+          "description": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "owner_id", "name", "is_public"]
+      },
+      "MembersResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "status": { "type": "string" },
+          "avatar_url": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["id", "username", "status"]
+      },
+      "ChannelCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "integer", "format": "int32" },
+          "position": { "type": "integer", "format": "int32" }
+        },
+        "required": ["name", "type", "position"]
+      },
+      "ChannelResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "server_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "type": { "type": "integer", "format": "int32" },
+          "position": { "type": "integer", "format": "int32" }
+        },
+        "required": ["id", "server_id", "name", "type", "position"]
+      }
+    }
+  },
+  "paths": {
+    "/healthz": {
+      "get": {
+        "tags": ["System"],
+        "operationId": "healthz",
+        "responses": {
+          "200": {
+            "description": "Server healthy",
+            "content": { "text/plain": { "schema": { "type": "string", "example": "OK\n" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/login": {
+      "post": {
+        "tags": ["Auth"],
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in",
+            "headers": {
+              "Set-Cookie": { "schema": { "type": "string" } }
+            },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "tags": ["Auth"],
+        "operationId": "createUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateUserResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "tags": ["Auth"],
+        "operationId": "sessionCheck",
+        "security": [{ "accessTokenCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Session active",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "operationId": "refreshToken",
+        "security": [{ "refreshTokenCookie": [] }],
+        "responses": {
+          "204": { "description": "Tokens rotated" }
+        }
+      }
+    },
+    "/api/v1/revoke": {
+      "post": {
+        "tags": ["Auth"],
+        "operationId": "revokeToken",
+        "responses": {
+          "204": { "description": "Tokens revoked" }
+        }
+      }
+    },
+    "/api/v1/servers/public": {
+      "get": {
+        "tags": ["Servers"],
+        "operationId": "getPublicServers",
+        "responses": {
+          "200": {
+            "description": "Public servers",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ServerResponse" } } } }
+          }
+        }
+      }
+    },
+    "/api/v1/servers": {
+      "get": {
+        "tags": ["Servers"],
+        "operationId": "getServers",
+        "security": [{ "accessTokenCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Member servers",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ServerResponse" } } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Servers"],
+        "operationId": "createServer",
+        "security": [{ "accessTokenCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ServerRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Server created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ServerResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/servers/join": {
+      "post": {
+        "tags": ["Servers"],
+        "operationId": "joinServer",
+        "security": [{ "accessTokenCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ServerJoinRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Joined server",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ServerResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/leave": {
+      "post": {
+        "tags": ["Servers"],
+        "operationId": "leaveServer",
+        "security": [{ "accessTokenCookie": [] }],
+        "parameters": [
+          { "name": "server_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "Left server" }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/members": {
+      "get": {
+        "tags": ["Servers"],
+        "operationId": "getServerMembers",
+        "security": [{ "accessTokenCookie": [] }],
+        "parameters": [
+          { "name": "server_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server members",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/MembersResponse" } } } }
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/channels": {
+      "get": {
+        "tags": ["Channels"],
+        "operationId": "getServerChannels",
+        "security": [{ "accessTokenCookie": [] }],
+        "parameters": [
+          { "name": "server_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server channels",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChannelResponse" } } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Channels"],
+        "operationId": "createChannel",
+        "security": [{ "accessTokenCookie": [] }],
+        "parameters": [
+          { "name": "server_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChannelCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Channel created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChannelResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/channels/{channel_id}": {
+      "delete": {
+        "tags": ["Channels"],
+        "operationId": "deleteChannel",
+        "security": [{ "accessTokenCookie": [] }],
+        "parameters": [
+          { "name": "server_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "channel_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "Channel deleted" }
+        }
+      }
+    }
+  }
+}

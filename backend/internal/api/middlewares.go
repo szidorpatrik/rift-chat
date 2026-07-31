@@ -17,6 +17,8 @@ type statusRecorder struct {
 
 var publicEndpoints = []string{
 	"/favicon.ico",
+	"/docs",
+	"/docs/openapi.json",
 	"/healthz",
 	// "/wt",
 }

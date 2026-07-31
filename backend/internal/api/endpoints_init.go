@@ -3,6 +3,8 @@ package api
 import "net/http"
 
 func (cfg *ApiConfig) registerSystemRoutes(mux *http.ServeMux) {
+	mux.HandleFunc(newEndpoint("GET", "/docs"), cfg.SwaggerDocsHandler)
+	mux.HandleFunc(newEndpoint("GET", "/docs/openapi.json"), cfg.SwaggerSpecHandler)
 	mux.HandleFunc(newEndpoint("GET", "/healthz"), cfg.HealthzHandler)
 }
 
@@ -25,13 +27,15 @@ func (cfg *ApiConfig) registerServerRoutes(mux *http.ServeMux) {
 	getServerMembers := http.HandlerFunc(cfg.GetServerMembersHandler)
 	createServer := http.HandlerFunc(cfg.CreateServerHandler)
 	joinServer := http.HandlerFunc(cfg.JoinServerHandler)
+	leaveServer := http.HandlerFunc(cfg.LeaveServerHandler)
 
 	mux.Handle(newEndpoint("GET", "/servers"), cfg.RequireAuth(getServers))
 	mux.Handle(newEndpoint("POST", "/servers"), cfg.RequireAuth(createServer))
 	mux.Handle(newEndpoint("POST", "/servers/join"), cfg.RequireAuth(joinServer))
-
+	
 	// Membership required
 	mux.Handle(newEndpoint("GET", "/servers/{server_id}/members"), cfg.RequireAuth(cfg.ServerMembershipMiddleware(getServerMembers)))
+	mux.Handle(newEndpoint("POST", "/servers/{server_id}/leave"), cfg.RequireAuth(cfg.ServerMembershipMiddleware(leaveServer)))
 
 	//TODO: invite code based join
 	//mux.Handle(newEndpoint("POST", "/servers/join/{invite_code}"), cfg.RequireAuth(joinServerByInviteCode))

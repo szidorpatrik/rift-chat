@@ -165,6 +165,8 @@ rift-chat-api/
 All REST API endpoints are prefixed with `/api/v1`.
 All WEBTRANSPORT endpoints are prefixed with `/wt`.
 
+Interactive Swagger docs are available at `/api/v1/docs` and the raw OpenAPI spec is available at `/api/v1/docs/openapi.json`.
+
 For complete documentation regarding request/response shapes, headers, and status codes, please refer to the [API Documentation](../docs/api.md) file.
 
 ## Core Routes
@@ -189,6 +191,7 @@ For complete documentation regarding request/response shapes, headers, and statu
 * `POST /api/v1/servers` - Create a new server instance *(Requires Auth)*
 * `POST /api/v1/servers/join` - Join an existing server *(Requires Auth)*
 * `GET  /api/v1/servers/{server_id}/members` - Retrieve the member roster for a specific server *(Requires Auth + Server Membership)*
+* `POST /api/v1/servers/{server_id}/leave` - Leave a specific server *(Requires Auth + Server Membership)*
 
 ### Channel Management
 
